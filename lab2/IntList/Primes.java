@@ -19,25 +19,16 @@ public class Primes {
      * @return True iff. the integer is prime
      */
     public static boolean isPrime(int n) {
-        // Corner cases
-        if (n <= 1 || n == 4) return false;
-        if (n <= 3) return true;
-
-        int k = 3; // Try k = 3 times
-        while (k > 0)
-        {
-            // Pick a random number in [2..n-2]
-            // Above corner cases make sure that n > 4
-            int a = 2 + (int)(Math.random() % (n - 4));
-
-            // Fermat's little theorem
-            if (power(a, n - 1, n) != 1)
-                return false;
-
-            k--;
+        if (n < 2) {
+            return false; // 小于2的数不是素数
         }
 
-        return true;
+        for (int i = 2; i < n; i++) {
+            if (n % i == 0) { // 如果 n 可以被 i 整除，则 n 不是素数
+                return false;
+            }
+        }
+        return true; // 如果没有能整除的数，则 n 是素数
     }
 
     /**
