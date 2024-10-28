@@ -65,20 +65,22 @@ public class IntListExercises {
      * @param lst IntList from Lecture
      * @return True if there was an update to the list
      */
-    public static boolean squarePrimes(IntList lst) {
+    public static boolean squarePrimes(IntList lst,boolean ischange) {
         // Base Case: we have reached the end of the list
-        if (lst == null) {
-            return false;
+        IntList head = lst;
+        if (head ==null){
+            return ischange;
         }
-
-        boolean currElemIsPrime = Primes.isPrime(lst.first);
-
+        boolean currElemIsPrime = Primes.isPrime(head.first);
         if (currElemIsPrime) {
-            lst.first *= lst.first;
+            head.first *= head.first;
+            ischange =true;
         }
-        // 继续检查剩余的链表
-        boolean restChanged = squarePrimes(lst.rest);
+        return squarePrimes(head.rest,ischange);
 
-        return currElemIsPrime || squarePrimes(lst.rest);
+    }
+
+    public static boolean squarePrimes(IntList lst) {
+        return squarePrimes(lst,false);
     }
 }
