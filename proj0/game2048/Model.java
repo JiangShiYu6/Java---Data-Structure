@@ -109,11 +109,65 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
+        int size=board.size();
 
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        if(side != Side.NORTH)
+            board.setViewingPerspective(side);
+        for(int c=0;c<size;c++)
+        {
+            for(int r=size-2;r>=0;r--)
+            {
+                int next=0;
+                Tile t = board.tile(c, r);
+                if(t!=null)
+                {
+                    for(int row_before=r+1;row_before<size;row_before++)
+                    {
+                        if(tile(c,row_before)==null)
+                        {
+                            next++;
+                        }
+                    }
+                    board.move(c,r+next,t);
+                    changed = true;
+                }
+            }
+        }
+        for(int col = 0; col < size; col ++){
+            for(int row = size - 2; row >= 0; row --){
+                Tile t1 = board.tile(col, row);
+                if(t1 != null){
+                    Tile t2 = board.tile(col, row + 1);
+                    if(t2 != null && t1.value() == t2.value()){
+                        board.move(col, row + 1, t1);
+                        changed = true;
+                        score += 2 * t2.value();
+                    }
+                }
+            }
+        }
+        for(int col = 0; col < size; col ++) {
+            for (int row = size - 2; row >= 0; row--) {
+                int nulltile = 0;
+                Tile t = board.tile(col, row);
+                if(t != null) {
+                    for(int row_before = row + 1; row_before < size; row_before ++){
+                        if(tile(col, row_before) == null)
+                            nulltile ++;
+                    }
+                    board.move(col, row + nulltile, t);
+                    changed = true;
+                }
+            }
+        }
+        if(side != Side.NORTH)
+            board.setViewingPerspective(Side.NORTH);
 
+        // for the tilt to the Side SIDE. If the board changed, set the
+        // changed local variable to true.
         checkGameOver();
         if (changed) {
             setChanged();
@@ -138,6 +192,16 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for(int c=0;c<b.size();c++)
+        {
+            for(int r=0;r<b.size();r++)
+            {
+                if(b.tile(c,r)==null)
+                {
+                 return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +212,21 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for(int c=0;c<b.size();c++)
+        {
+            for(int r=0;r<b.size();r++)
+            {
+                if(b.tile(c, r) == null)
+                {
+
+                    continue;
+                }
+                if(b.tile(c,r).value()==MAX_PIECE)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -157,14 +236,45 @@ public class Model extends Observable {
      * 1. There is at least one empty space on the board.
      * 2. There are two adjacent tiles with the same value.
      */
+    public static boolean check(Board b)
+    {
+        for(int c=0;c<b.size();c++)
+        {
+            for(int r=0;r<b.size()-1;r++)
+            {
+                if(b.tile(c,r).value()==b.tile(c,r+1).value())
+                {
+                    return true;
+                }
+            }
+        }
+        for(int c=0;c<b.size()-1;c++)
+        {
+            for(int r=0;r<b.size();r++)
+            {
+                if(b.tile(c+1,r).value()==b.tile(c,r).value())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if(emptySpaceExists( b)||check(b))
+        {
+            return true;
+        }
+
+
         return false;
     }
 
 
     @Override
-     /** Returns the model as a string, used for debugging. */
+    /** Returns the model as a string, used for debugging. */
     public String toString() {
         Formatter out = new Formatter();
         out.format("%n[%n");
