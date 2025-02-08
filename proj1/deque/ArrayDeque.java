@@ -1,14 +1,17 @@
 package deque;
 
-public class ArrayDeque<T> implements Deque<T> {
-    private T[] items;  // 存储数据的数组
-    private int size;    // 当前 Deque 的元素个数
-    private int front;   // 头部索引
-    private int back;    // 尾部索引
-    private static final int INITIAL_CAPACITY = 8; // 数组初始大小
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> { // 实现 Iterable<T>
+    private T[] items;
+    private int size;
+    private int front;
+    private int back;
+    private static final int INITIAL_CAPACITY = 8;
 
     public ArrayDeque() {
-        items = (T[]) new Object[INITIAL_CAPACITY]; // 创建泛型数组
+        items = (T[]) new Object[INITIAL_CAPACITY];
         size = 0;
         front = 0;
         back = 0;
@@ -46,17 +49,17 @@ public class ArrayDeque<T> implements Deque<T> {
     public T removeFirst() {
         if (isEmpty()) return null;
         T removedItem = items[front];
-        items[front] = null; // 避免内存泄漏
-        front = (front + 1) % items.length; // 更新 front
+        items[front] = null;
+        front = (front + 1) % items.length;
         size--;
-        checkResize(); // 检查是否需要缩小数组
+        checkResize();
         return removedItem;
     }
 
     @Override
     public T removeLast() {
         if (isEmpty()) return null;
-        back = (back - 1 + items.length) % items.length; // 更新 back
+        back = (back - 1 + items.length) % items.length;
         T removedItem = items[back];
         items[back] = null;
         size--;
@@ -77,19 +80,44 @@ public class ArrayDeque<T> implements Deque<T> {
 
     private void resize(int newCapacity) {
         T[] newItems = (T[]) new Object[newCapacity];
-
         for (int i = 0; i < size; i++) {
             newItems[i] = items[(front + i) % items.length];
         }
-
         items = newItems;
         front = 0;
-        back = size; // back 直接等于 size，指向下一个可用索引
+        back = size;
     }
 
     private void checkResize() {
         if (items.length >= 16 && size < items.length / 4) {
             resize(items.length / 2);
+        }
+    }
+
+    // **实现迭代器**
+    @Override
+    public Iterator<T> iterator() {
+        return new ArrayDequeIterator();
+    }
+
+    private class ArrayDequeIterator implements Iterator<T> {
+        private int index = 0; // 记录遍历到的元素个数
+        private int current = front; // 当前遍历到的索引
+
+        @Override
+        public boolean hasNext() {
+            return index < size;
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T item = items[current];
+            current = (current + 1) % items.length; // 循环数组移动
+            index++;
+            return item;
         }
     }
 }

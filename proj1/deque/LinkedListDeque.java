@@ -1,6 +1,9 @@
 package deque;
 
-public class LinkedListDeque<T> implements Deque<T> {
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> { // 实现 Iterable<T>
     private class Node {
         T item;
         Node prev;
@@ -99,12 +102,38 @@ public class LinkedListDeque<T> implements Deque<T> {
     @Override
     public T get(int index) {
         if (index >= size || index < 0) {
-            return null; // 规范要求返回 null，而不是抛异常
+            return null;
         }
         Node getNode = sentinel.next;
         for (int i = 0; i < index; i++) {
             getNode = getNode.next;
         }
         return getNode.item;
+    }
+
+    /** 实现 Iterable<T> 接口，使 LinkedListDeque 可被迭代 */
+    @Override
+    public Iterator<T> iterator() {
+        return new LinkedListDequeIterator();
+    }
+
+    /** 内部类，定义 LinkedListDeque 的迭代器 */
+    private class LinkedListDequeIterator implements Iterator<T> {
+        private Node current = sentinel.next; // 从第一个元素开始
+
+        @Override
+        public boolean hasNext() {
+            return current != sentinel; // 判断是否到达尾部（哨兵）
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T item = current.item;
+            current = current.next; // 移动到下一个元素
+            return item;
+        }
     }
 }
