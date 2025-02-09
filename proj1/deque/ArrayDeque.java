@@ -1,122 +1,146 @@
 package deque;
 
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.Objects;
 
-public class ArrayDeque<T> implements Deque<T>, Iterable<T> { // 实现 Iterable<T>
-    private T[] items;
+public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
+    @SuppressWarnings("unchecked")
+    private T[] items = (T[]) new Object[8];
     private int size;
-    private int front;
-    private int back;
-    private static final int INITIAL_CAPACITY = 8;
+    private int nextFirst;
+    private int nextLast;
 
     public ArrayDeque() {
-        items = (T[]) new Object[INITIAL_CAPACITY];
         size = 0;
-        front = 0;
-        back = 0;
+        nextFirst = 3;
+        nextLast = 4;
     }
 
-    @Override
+    public ArrayDeque(T item) {
+        items[3] = item;
+        size = 1;
+        nextFirst = 2;
+        nextLast = 4;
+    }
+
     public void addFirst(T item) {
-        if (items.length == size) {
-            resize(items.length * 2);
+        items[nextFirst] = item;
+        size += 1;
+        nextFirst -= 1;
+        if (nextFirst == -1) {
+            resize(size * 2);
         }
-        front = (front - 1 + items.length) % items.length;
-        items[front] = item;
-        size++;
     }
 
-    @Override
     public void addLast(T item) {
-        if (items.length == size) {
-            resize(items.length * 2);
+        items[nextLast] = item;
+        size += 1;
+        nextLast += 1;
+        if (nextLast == items.length) {
+            resize(size * 2);
         }
-        items[back] = item;
-        back = (back + 1) % items.length;
-        size++;
     }
 
-    @Override
-    public void printDeque() {
-        for (int i = 0; i < size; i++) {
-            System.out.print(items[(front + i) % items.length] + " ");
-        }
-        System.out.println();
-    }
-
-    @Override
-    public T removeFirst() {
-        if (isEmpty()) return null;
-        T removedItem = items[front];
-        items[front] = null;
-        front = (front + 1) % items.length;
-        size--;
-        checkResize();
-        return removedItem;
-    }
-
-    @Override
-    public T removeLast() {
-        if (isEmpty()) return null;
-        back = (back - 1 + items.length) % items.length;
-        T removedItem = items[back];
-        items[back] = null;
-        size--;
-        checkResize();
-        return removedItem;
-    }
-
-    @Override
-    public T get(int index) {
-        if (index < 0 || index >= size) return null;
-        return items[(front + index) % items.length];
-    }
-
-    @Override
     public int size() {
         return size;
     }
 
-    private void resize(int newCapacity) {
-        T[] newItems = (T[]) new Object[newCapacity];
-        for (int i = 0; i < size; i++) {
-            newItems[i] = items[(front + i) % items.length];
+    public void printDeque() {
+        System.out.println(String.join(" ", Arrays.stream(items).filter(Objects::nonNull).map(T::toString).toArray(String[]::new)));
+    }
+
+    public T removeFirst() {
+        if (isEmpty()) {
+            return null;
         }
+        nextFirst += 1;
+        T item = items[nextFirst];
+        items[nextFirst] = null;
+        size -= 1;
+        shrinkSize();
+        return item;
+    }
+
+    public T removeLast() {
+        if (isEmpty()) {
+            return null;
+        }
+        nextLast -= 1;
+        T item = items[nextLast];
+        items[nextLast] = null;
+        size -= 1;
+        shrinkSize();
+        return item;
+    }
+
+    private void shrinkSize() {
+        if (isEmpty()) {
+            resize(8);
+        } else if (items.length / 4 > size && size >= 4) {
+            resize(size * 2);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void resize(int s) {
+        T[] newItems = (T[]) new Object[s];
+        int firstPos = Math.abs(s - size) / 2;
+        System.arraycopy(items, nextFirst + 1, newItems, firstPos, size);
         items = newItems;
-        front = 0;
-        back = size;
+        nextFirst = firstPos - 1;
+        nextLast = firstPos + size;
     }
 
-    private void checkResize() {
-        if (items.length >= 16 && size < items.length / 4) {
-            resize(items.length / 2);
+    public T get(int index) {
+        if (index < 0 || index > size - 1) {
+            return null;
         }
+        int itemIndex = nextFirst + 1 + index;
+        return items[itemIndex];
     }
 
-    // **实现迭代器**
-    @Override
     public Iterator<T> iterator() {
         return new ArrayDequeIterator();
     }
 
-    private class ArrayDequeIterator implements Iterator<T> {
-        private int index = 0; // 记录遍历到的元素个数
-        private int current = front; // 当前遍历到的索引
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof ArrayDeque)) {
+            return false;
+        }
+        ArrayDeque<?> ad = (ArrayDeque<?>) o;
+        if (ad.size() != size) {
+            return false;
+        }
+        for (int i = 0; i < size; i++) {
+            if (ad.get(i) != get(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        @Override
+    private class ArrayDequeIterator implements Iterator<T> {
+        private int index;
+
+        ArrayDequeIterator() {
+            index = 0;
+        }
+
         public boolean hasNext() {
             return index < size;
         }
 
-        @Override
         public T next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            T item = items[current];
-            current = (current + 1) % items.length; // 循环数组移动
-            index++;
+            T item = get(index);
+            index += 1;
             return item;
         }
     }
