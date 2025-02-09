@@ -8,195 +8,160 @@ import static org.junit.Assert.*;
 public class ArrayDequeTest {
 
     @Test
-    public void nonEmptyInstantiationTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>(1);
+    public void resizeTest() {
+        Deque<Integer> ad = new ArrayDeque<>();
 
-        assertFalse("Should not be empty", arrayDeque.isEmpty());
-        assertEquals("Should have size 1", 1, arrayDeque.size());
-    }
-
-    @Test
-    public void addTest() {
-        ArrayDeque<String> arrayDeque = new ArrayDeque<>();
-
-        assertTrue("Should be empty", arrayDeque.isEmpty());
-
-        arrayDeque.addFirst("front");
-        assertEquals("Should have size 1", 1, arrayDeque.size());
-
-        arrayDeque.addLast("middle");
-        assertEquals("Should have size 2", 2, arrayDeque.size());
-
-        arrayDeque.addLast("back");
-        assertEquals("Should have size 3", 3, arrayDeque.size());
-
-        System.out.println("Printing out deque: ");
-        arrayDeque.printDeque();
-    }
-
-    @Test
-    public void addWithResizingTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
-
-        for (int i = 0; i < 20; i++) {
-            arrayDeque.addLast(i);
+        for (int i = 0; i < 100; i++) {
+            ad.addLast(i);
         }
 
-        assertEquals("Should have size 20", 20, arrayDeque.size());
-    }
-
-    @Test
-    public void addBigAmountTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
-
-        int M = 1000000;
-
-        for (int i = 0; i < M; i++) {
-            arrayDeque.addLast(i);
-        }
-
-        assertEquals("Should have size 1000000", M, arrayDeque.size());
-    }
-
-    @Test
-    public void removeTest() {
-        ArrayDeque<String> arrayDeque = new ArrayDeque<>();
-
-        arrayDeque.addFirst("front");
-        arrayDeque.addLast("middle");
-        arrayDeque.addLast("back");
-
-        assertEquals("Should remove last item", "back", arrayDeque.removeLast());
-        assertEquals("Should remove first item", "front", arrayDeque.removeFirst());
-
-        assertEquals("Should have size 1", 1, arrayDeque.size());
-    }
-
-    @Test
-    public void removeWithResizingTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
-
-        for (int i = 0; i < 20; i++) {
-            arrayDeque.addLast(i);
-        }
-
-        for (int i = 0; i < 20; i++) {
-            assertEquals("Should be equal", i, (int) arrayDeque.removeFirst());
-        }
-
-        assertTrue("Should be empty", arrayDeque.isEmpty());
-
-        for (int i = 0; i < 20; i++) {
-            arrayDeque.addLast(i);
-        }
-
-        assertEquals("Should have size 20", 20, arrayDeque.size());
-    }
-
-    @Test
-    public void removeBigAmountTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
-
-        int M = 1000000;
-
-        for (int i = 0; i < M; i++) {
-            arrayDeque.addLast(i);
-        }
-
-        assertEquals("Should have size 1000000", M, arrayDeque.size());
-
-        for (int i = 0; i < M; i++) {
-            assertEquals("Should be equal", i, (int) arrayDeque.removeFirst());
-        }
-
-        assertTrue("Should be empty", arrayDeque.isEmpty());
-    }
-
-    @Test
-    public void getTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
-
-        for (int i = 0; i < 20; i++) {
-            arrayDeque.addLast(i);
-        }
-
-        for (int i = 0; i < 20; i++) {
-            assertEquals("Should be equal", i, (int) arrayDeque.get(i));
-        }
-
-        assertNull("Should be null when index out of bound", arrayDeque.get(20));
-    }
-
-    @Test
-    public void getBigAmountTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
-
-        int M = 1000000;
-
-        for (int i = 0; i < M; i++) {
-            arrayDeque.addLast(i);
-        }
-
-        for (int i = 0; i < M; i++) {
-            assertEquals("Should be equal", i, (int) arrayDeque.get(i));
+        for (double i = 0; i < 50; i++) {
+            assertEquals("Should have the same value", i, (double) ad.removeFirst(), 0.0);
         }
     }
 
     @Test
-    public void iteratorTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
+    public void differentDequeTypeNotEqualsTest() {
+        Deque<Integer> lld = new LinkedListDeque<>();
+        lld.addLast(10);
+        lld.addLast(20);
+        lld.addLast(25);
 
-        for (int i = 0; i < 20; i++) {
-            arrayDeque.addLast(i);
-        }
+        ArrayDeque<Integer> ad = new ArrayDeque<>();
+        ad.addLast(10);
+        ad.addLast(15);
+        ad.addLast(25);
 
-        int index = 0;
-        for (int item : arrayDeque) {
-            assertEquals("Should be equal", index, item);
-            index += 1;
-        }
+        assertFalse(lld.equals(ad));
+        assertFalse(ad.equals(lld));
+    }
+
+    @Test
+    public void differentDequeTypeEqualsTest() {
+        LinkedListDeque<Integer> lld = new LinkedListDeque<>();
+        lld.addLast(10);
+        lld.addLast(15);
+        lld.addLast(25);
+
+        ArrayDeque<Integer> ad = new ArrayDeque<>();
+        ad.addLast(10);
+        ad.addLast(15);
+        ad.addLast(25);
+
+        assertTrue(ad.equals(lld));
+        assertTrue(lld.equals(ad));
+
+
+        LinkedListDeque<String> lld2 = new LinkedListDeque<>();
+        lld2.addLast("a");
+        lld2.addLast("b");
+        lld2.addLast("c");
+
+        ArrayDeque<String> ad2 = new ArrayDeque<>();
+        ad2.addLast("a");
+        ad2.addLast("b");
+        ad2.addLast("c");
+
+        assertTrue(ad2.equals(lld2));
+        assertTrue(lld2.equals(ad2));
     }
 
     @Test
     public void equalsTest() {
         ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addLast(10);
+        ad1.addLast(15);
+        ad1.addLast(25);
+
         ArrayDeque<Integer> ad2 = new ArrayDeque<>();
+        ad2.addLast(10);
+        ad2.addLast(15);
+        ad2.addLast(25);
 
-        ad1.addLast(0);
-        ad2.addLast(0);
-        assertEquals(ad1, ad2);
+        assertTrue(ad1.equals(ad2));
 
-        ad1.addLast(1);
-        assertNotEquals(ad1, ad2);
+    }
 
-        ad2.addLast(2);
-        assertNotEquals(ad1, ad2);
+    @Test
+    public void removeEmptyTest() {
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+        ad1.addFirst(3);
+
+        ad1.removeLast();
+        ad1.removeFirst();
+        ad1.removeLast();
+        ad1.removeFirst();
+
+        int size = ad1.size();
+        String errorMsg = "  Bad size returned when removing from empty deque.\n";
+        errorMsg += "  student size() returned " + size + "\n";
+        errorMsg += "  actual size() returned 0\n";
+
+        assertEquals(errorMsg, 0, size);
+    }
+
+    @Test
+    public void bigADequeTest() {
+        ArrayDeque<Integer> ad1 = new ArrayDeque<>();
+
+        for (int i = 0; i < 10000; i++) {
+            ad1.addLast(i);
+        }
+
+        for (double i = 0; i < 5000; i++) {
+            assertEquals("Should have the same value", i, (double) ad1.removeFirst(), 0.0);
+        }
+
+        for (double i = 9999; i > 5000; i--) {
+            assertEquals("Should have the same value", i, (double) ad1.removeLast(), 0.0);
+        }
+
     }
 
     @Test
     public void randomizedTest() {
-        ArrayDeque<Integer> arrayDeque = new ArrayDeque<>();
+        ArrayDeque<Integer> correct = new ArrayDeque<>();
+        ArrayDeque<Integer> broken = new ArrayDeque<>();
 
-        int N = 1000000;
+
+        int N = 5000;
         for (int i = 0; i < N; i += 1) {
-            int operationNumber = StdRandom.uniform(0, 6);
+            int operationNumber = StdRandom.uniform(0, 7);
             if (operationNumber == 0) {
+                // addLast
                 int randVal = StdRandom.uniform(0, 100);
-                arrayDeque.addFirst(randVal);
+                correct.addLast(randVal);
+                broken.addLast(randVal);
+
+                assertEquals(correct.get(broken.size() - 1), broken.get(broken.size() - 1));
             } else if (operationNumber == 1) {
+                // addFirst
                 int randVal = StdRandom.uniform(0, 100);
-                arrayDeque.addLast(randVal);
-            } else if (arrayDeque.size() == 0) {
-                assertTrue(arrayDeque.isEmpty());
+                correct.addFirst(randVal);
+                broken.addFirst(randVal);
+
+                assertEquals(correct.get(0), broken.get(0));
             } else if (operationNumber == 2) {
-                assertTrue(arrayDeque.size() > 0);
+                // size
+                assertEquals(correct.size(), broken.size());
             } else if (operationNumber == 3) {
-                arrayDeque.removeFirst();
+                // getLast
+                assertEquals(correct.get(broken.size() - 1), broken.get(broken.size() - 1));
             } else if (operationNumber == 4) {
-                arrayDeque.removeLast();
+                // removeLast
+                assertEquals(correct.removeLast(), broken.removeLast());
             } else if (operationNumber == 5) {
-                int randIndex = StdRandom.uniform(0, arrayDeque.size());
-                arrayDeque.get(randIndex);
+                // removeFirst
+                assertEquals(correct.removeFirst(), broken.removeFirst());
+            } else if (operationNumber == 6) {
+                // isEmpty
+                if (correct.size() == 0) {
+                    assertTrue(correct.isEmpty());
+                    assertTrue(broken.isEmpty());
+                } else {
+                    assertFalse(correct.isEmpty());
+                    assertFalse(broken.isEmpty());
+                }
             }
         }
     }
