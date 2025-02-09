@@ -12,11 +12,6 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
         size = 0;
     }
 
-    public LinkedListDeque(T item) {
-        head.next = new Node<>(item, head, head);
-        head.prev = head.next;
-        size = 1;
-    }
 
     public void addFirst(T item) {
         head.next = new Node<>(item, head, head.next);
