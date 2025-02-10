@@ -3,22 +3,17 @@
  */
 public class Collatz {
 
-    /** Correct implementation of nextNumber based on Collatz conjecture. */
     public static int nextNumber(int n) {
-        if (n % 2 == 0) {  // 如果 n 是偶数
-            return n / 2;
-        } else {  // 如果 n 是奇数
-            return 3 * n + 1;
-        }
+        return n % 2 == 0 ? n/2 : 3*n + 1;
     }
 
     public static void main(String[] args) {
-        int n = 5;  // 可以更改初始值来测试其他数字
+        int n = 5;  // Set n equal to any positive integer.
         System.out.print(n + " ");
         while (n != 1) {
             n = nextNumber(n);
             System.out.print(n + " ");
         }
-        System.out.println();  // 换行
+        System.out.println();
     }
 }
