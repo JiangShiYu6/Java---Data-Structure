@@ -60,6 +60,7 @@ public class CapersRepository {
      */
     public static void writeStory(String text) {
         File f1=join(CAPERS_FOLDER,"story");
+        System.out.println("DEBUG: writing to " + f1.getAbsolutePath());
         String s=readContentsAsString(f1)+text+"\n";
         writeContents(f1,s);
         System.out.println(s);
