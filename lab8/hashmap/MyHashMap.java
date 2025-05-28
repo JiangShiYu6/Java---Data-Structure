@@ -35,6 +35,10 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     public MyHashMap(int initialSize) {
         this(initialSize, DEFAULT_MAX_LOAD); // 调用另一个构造函数
     }
+    public MyHashMap() {
+        this(initialSize, DEFAULT_MAX_LOAD);
+    }
+
 
     /**
      * MyHashMap constructor that creates a backing array of initialSize.
