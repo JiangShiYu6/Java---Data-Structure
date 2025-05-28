@@ -49,7 +49,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      */
     @SuppressWarnings("unchecked")
     public MyHashMap(int initialSize, double maxLoad) {
-        this.maxLoadFactor = maxLoadFactor;
+        this.maxLoadFactor = maxLoad;
         this.size = 0;
         buckets = createTable(initialSize);  // 初始化桶数组
     }
