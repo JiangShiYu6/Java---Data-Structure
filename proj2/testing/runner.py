@@ -3,7 +3,7 @@ from subprocess import \
     check_output, PIPE, STDOUT, DEVNULL, CalledProcessError, TimeoutExpired
 from os.path import abspath, basename, dirname, exists, join, splitext, isdir
 from getopt import getopt, GetoptError
-from os import chdir, environ, getcwd, mkdir, remove
+from os import chdir, environ, getcwd, mkdir, remove, access, W_OK
 from shutil import copyfile, rmtree
 from math import log
 from glob import glob
@@ -98,15 +98,7 @@ sp21-s***
   │   └── ...
   └── ...
 
-Note your CWD must be `sp21-s***/proj2/testing`
-
-Also check that your REPO_DIR environment variable is the path to your
-`sp21-s***` directory. You can check this by running the command:
-
-    $ echo REPO_DIR
-    /Users/omarkhan902/cs61b/61b_sp21_stuff/sp21-s3
-
-That's what mine looks like. Go back to lab1 if you are still having issues"""
+Note your CWD must be `repo/proj2/testing`"""
 
 JAVA_COMMAND = "java"
 CAPERS_COMMAND = "gitlet.Main"
@@ -445,6 +437,7 @@ def doTest(test):
 if __name__ == "__main__":
     show = None
     keep = False
+    prog_dir = None
     lib_dir = None
     verbose = False
     superverbose = False
@@ -475,48 +468,30 @@ if __name__ == "__main__":
             elif opt == "--debug":
                 DEBUG = True
                 TIMEOUT = 100000
-        if lib_dir is None:
-            lib_dir = join(abspath(environ['REPO_DIR']),
-                           "library-sp21/javalib")
-        else:
-            lib_dir = join(abspath(getcwd()), abspath(lib_dir))
+
+        if prog_dir is None:
+            prog_dir = abspath(getcwd())
+            k = 10
+            while k > 0 and access(prog_dir, W_OK):
+                k -= 1
+                if exists(join(prog_dir, 'gitlet', 'Main.class')):
+                    break
+                prog_dir = dirname(prog_dir)
+            else:
+                print("Could not find gitlet.Main.", file=sys.stderr)
+                sys.exit(1)
     except GetoptError:
         Usage()
     if not files:
         print(USAGE)
         sys.exit(0)
 
-    if not isdir(lib_dir):
-        print(DIRECTORY_LAYOUT_ERROR.format("lib"))
-        sys.exit(1)
-    elif not isdir(gitlet_dir):
-        print(DIRECTORY_LAYOUT_ERROR.format("gitlet"))
-        sys.exit(1)
-
-    gitlet_dir = "\"" + gitlet_dir + "\"" # in case path has a space in it
-    lib_dir = "\"" + lib_dir + "\"" # in case path has a space in it
-
-    lib_glob = join(lib_dir, "*")
     ON_WINDOWS = Match(r'.*\\', join('a', 'b'))
     if ON_WINDOWS:
-        if ('CLASSPATH' in environ):
-            environ['CLASSPATH'] = "{};{};{}".format(abspath(getcwd()), lib_glob, environ['CLASSPATH'])
-        else:
-            environ['CLASSPATH'] = "{};{}".format(abspath(getcwd()), lib_glob)
+        environ['CLASSPATH'] = "{};{}".format(prog_dir, environ['CLASSPATH'])
     else:
-        if ('CLASSPATH' in environ):
-            environ['CLASSPATH'] = "{}:{}:{}".format(abspath(getcwd()), lib_glob, environ['CLASSPATH'])
-        else:
-            environ['CLASSPATH'] = "{}:{}".format(abspath(getcwd()), lib_glob)
+        environ['CLASSPATH'] = "{}:{}".format(prog_dir, environ['CLASSPATH'])
         JAVA_COMMAND = 'exec ' + JAVA_COMMAND
-        JAVAC_COMMAND = 'exec ' + JAVAC_COMMAND
-
-    compile_target = join(gitlet_dir, "*.java")
-    msg, output = doCompile(compile_target)
-    if output.find("error") >= 0:
-        print(output)
-        print("Your program failed to compile. Ran 0 tests.")
-        sys.exit(1)
 
     matching_files = []
     for path in files:
