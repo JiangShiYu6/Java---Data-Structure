@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static gitlet.Repository.ADD_STAGE;
+import static gitlet.Repository.REMOVE_STAGE;
 
 public class Stage implements Serializable {
     public static final File ADD_STAGE_FILE = Utils.join(Repository.GITLET_DIR, "add_stage");
@@ -37,7 +38,9 @@ public class Stage implements Serializable {
         return removeStage;
     }
     public void save(){
-        Utils.writeObject(ADD_STAGE_FILE, this);//this表示当前的 Stage 对象实例；
+        // 分别保存add_stage和remove_stage
+        Utils.writeObject(ADD_STAGE, (Serializable) addStage);
+        Utils.writeObject(REMOVE_STAGE, (Serializable) removeStage);
     }
     public boolean IsStageEmpty(){
         if(addStage.isEmpty()&&removeStage.isEmpty()){
@@ -62,8 +65,13 @@ public class Stage implements Serializable {
     }
     //加载 stage 对象
     public static Stage loadStage() {
-        return ADD_STAGE.exists()
-                ? Utils.readObject(ADD_STAGE, Stage.class)
-                : new Stage();
+        Stage stage = new Stage();
+        if (ADD_STAGE.exists()) {
+            stage.addStage = Utils.readObject(ADD_STAGE, HashMap.class);
+        }
+        if (REMOVE_STAGE.exists()) {
+            stage.removeStage = Utils.readObject(REMOVE_STAGE, HashSet.class);
+        }
+        return stage;
     }
 }

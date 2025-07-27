@@ -1,120 +1,151 @@
 package gitlet;
 
-import static gitlet.Help.checkIfInit;
-import static gitlet.Repository.*;
+import java.util.Arrays;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
-/** Driver class for Gitlet, a subset of the Git version-control system.
- *  @author TODO
+import static gitlet.GitletConstants.*;
+
+/**
+ * @description Driver class for Gitlet, a subset of the Git version-control system.
+ * hint: checkout command will also restore the index region(so-called "work tree clean")
+ * checkout just remove the HEAD pointer to a commit (maybe in other branch)
+ *
+ * use a HEAD FILE to store e.g. HEAD --> master information
+ * use a branches directory to store different branch and it's pointer to commit
+ * for example: master branch uses a file named [master] and store [commit id(SHA-1)] in it.
+ *
+ * hint: runnable has no args and no return! you can just regard runnable as a normal class
  */
 public class Main {
 
-    /** Usage: java gitlet.Main ARGS, where ARGS contains
-     *  <COMMAND> <OPERAND1> <OPERAND2> ... 
-     */
+    /**
+     * @note
+     * other error to be supplied
+     * 1. inputs a command with the wrong number or format of operands --> Incorrect operands.
+     * 2. command must with .gitlet folder created but hasn't been created --> Not in an initialized Gitlet directory.
+     * */
     public static void main(String[] args) {
-        if(args.length==0){
+        if (args.length == 0) {
             System.out.println("Please enter a command.");
-            System.exit(0);
+            return;
         }
         String firstArg = args[0];
+        String[] restArgs = Arrays.copyOfRange(args, 1, args.length);
         switch(firstArg) {
             case "init":
-                validArgs(args,1);
-                Repository.init();
+                if (restArgs.length == 0) {
+                    Repository.init();
+                } else {
+                    System.out.println(INCORRECT_OPERANDS_WARNING);
+                }
                 break;
             case "add":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.add(args[1]);
+                commandRunner(restArgs.length == 1, Repository::add, restArgs[0]);
                 break;
             case "commit":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.commit(args[1]);
+                commandRunner(restArgs.length == 1, Repository::commit, restArgs[0]);
                 break;
             case "rm":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.rm(args[1]);
+                commandRunner(restArgs.length == 1, Repository::rm, restArgs[0]);
                 break;
             case "log":
-                validArgs(args,1);
-                checkIfInit();
-                Repository.log();
+                commandRunner(restArgs.length == 0, Repository::log);
                 break;
             case "global-log":
-                validArgs(args,1);
-                checkIfInit();
-                Repository.global_log();
-                break;
-            case "find":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.find(args[1]);
-                break;
-            case "status":
-                validArgs(args,1);
-                checkIfInit();
-                Repository.status();
+                commandRunner(restArgs.length == 0, Repository::globalLog);
                 break;
             case "checkout":
-                checkIfInit();
-                if (args.length < 1 || args.length > 4) {
-                    System.out.println("Incorrect operands.");
-                    System.exit(0);
-                }
-                // === 模式 1: checkout -- [file name]
-                if (args.length == 3 && args[1].equals("--")) {
-                    String fileName = args[2];
-                    Repository.checkoutFileFromHead(fileName);
-                    return;
-                }
-                // === 模式 2: checkout [commit id] -- [file name]
-                if (args.length == 4 && args[2].equals("--")) {
-                    String commitID = args[1];
-                    String fileName = args[3];
-                    Repository.checkoutFileFromCommit(commitID, fileName);
-                    return;
-                }
-                // === 模式 3: checkout [branch name]
-                if (args.length == 2) {
-                    String branchName = args[1];
-                    Repository.checkoutBranch(branchName);
-                    return;
-                }
-                System.out.println("Incorrect operands.");
-                System.exit(0);
+                commandRunner(restArgs.length >= 1 && restArgs.length <= 3, Repository::checkout, restArgs);
+                break;
             case "branch":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.branch(args[1]);
+                commandRunner(restArgs.length == 1, Repository::branch, restArgs[0]);
+                break;
+            case "find":
+                commandRunner(restArgs.length == 1, Repository::find, restArgs[0]);
+                break;
+            case "status":
+                commandRunner(restArgs.length == 0, Repository::status);
                 break;
             case "rm-branch":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.rm_branch(args[1]);
+                commandRunner(restArgs.length == 1, Repository::removeBranch, restArgs[0]);
                 break;
             case "reset":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.reset(args[1]);
+                commandRunner(restArgs.length == 1, Repository::reset, restArgs[0]);
                 break;
             case "merge":
-                validArgs(args,2);
-                checkIfInit();
-                Repository.merge(args[1]);
+                commandRunner(restArgs.length == 1, Repository::merge, restArgs[0]);
+                break;
+            case "add-remote":
+                commandRunner(restArgs.length == 2, RemoteUtils::addRemote, restArgs[0], restArgs[1]);
+                break;
+            case "rm-remote":
+                commandRunner(restArgs.length == 1, RemoteUtils::removeRemote, restArgs[0]);
+                break;
+            case "push":
+                commandRunner(restArgs.length == 2, RemoteUtils::push, restArgs[0], restArgs[1]);
+                break;
+            case "fetch":
+                commandRunner(restArgs.length == 2, RemoteUtils::fetch, restArgs[0], restArgs[1]);
+                break;
+            case "pull":
+                commandRunner(restArgs.length == 2, RemoteUtils::pull, restArgs[0], restArgs[1]);
+                break;
+            case "test":
                 break;
             default:
                 System.out.println("No command with that name exists.");
-                System.exit(0);
         }
-
     }
 
-    private static void validArgs(String[] args, int num) {
-        if (args.length != num) {
-            System.out.println("Incorrect operands.");
-            System.exit(0);
+    /***
+     * check one command whether after init() and check arg numbers at the same time
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
+     */
+    private static <T> void commandRunner(boolean argsNumberCheck, Consumer<T> function, T args) {
+        if (!Repository.isInitialized()) {
+            System.out.println(UNINITIALIZED_WARNING);
+            return;
         }
+        if (!argsNumberCheck) {
+            System.out.println(INCORRECT_OPERANDS_WARNING);
+            return;
+        }
+        function.accept(args);
+    }
+
+    /***
+     * check one command whether after init() and check arg numbers at the same time
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
+     */
+    private static <T1, T2> void commandRunner(boolean argsNumberCheck, BiConsumer<T1, T2> function, T1 args1, T2 args2) {
+        if (!Repository.isInitialized()) {
+            System.out.println(UNINITIALIZED_WARNING);
+            return;
+        }
+        if (!argsNumberCheck) {
+            System.out.println(INCORRECT_OPERANDS_WARNING);
+            return;
+        }
+        function.accept(args1, args2);
+    }
+
+    /***
+     * similar to upper function with no args.
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
+     */
+    private static void commandRunner(boolean argsNumberCheck, Runnable function) {
+        if (!Repository.isInitialized()) {
+            System.out.println(UNINITIALIZED_WARNING);
+            return;
+        }
+        if (!argsNumberCheck) {
+            System.out.println(INCORRECT_OPERANDS_WARNING);
+            return;
+        }
+        function.run();
     }
 }
