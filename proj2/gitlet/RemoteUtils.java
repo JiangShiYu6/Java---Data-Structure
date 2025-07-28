@@ -19,7 +19,7 @@ import static gitlet.Help.getHeadCommitId;
  * Pulling is the same, but in the other direction.
  */
 public class RemoteUtils {
-    public static TreeMap<String, String> remoteLocationMap = new TreeMap<>();
+    static TreeMap<String, String> remoteLocationMap = new TreeMap<>();
 
     static {
         if (remoteRefsInitialized()) {

@@ -5,8 +5,7 @@ import java.util.*;
 
 import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
-import static gitlet.IndexUtils.indexMap;
-import static gitlet.IndexUtils.stagedFileContents;
+
 import static gitlet.Help.setHEAD;
 import static gitlet.Help.getHeadCommitId;
 import static gitlet.Help.isInitialized;
@@ -17,7 +16,7 @@ import static gitlet.Help.isInitialized;
  */
 public class Repository {
     /** HEAD pointer, this pointer points to current branch name, not explicit commit id, for example HEAD == "master" */
-    public static String HEAD;
+    static String HEAD;
 
 
 
@@ -82,10 +81,12 @@ public class Repository {
         }
 
         // maybe we should only update index; because after every commit, index and commit-map are same;
-        if (indexMap.containsKey(fileName)) {
-            String targetSHA1 = indexMap.get(fileName);
+        if (IndexUtils.indexMap.containsKey(fileName)) {
+            String targetSHA1 = IndexUtils.indexMap.get(fileName);
             // if the file is same as current index files, means no change, then directly return
-            if (FileUtils.hasSameSHA1(fileName, targetSHA1)) return;
+            if (FileUtils.hasSameSHA1(fileName, targetSHA1)) {
+                return;
+            }
         }
 
         IndexUtils.stageFile(fileName);
@@ -107,13 +108,13 @@ public class Repository {
         Commit currentCommit = CommitUtils.readCommit(currentCommitId);
         HashMap<String, String> fileVersionMap = currentCommit.getFileVersionMap();
         // bug: fileVersionMap may be null, but indexMap will never be null(after git init)
-        if (indexMap.equals(fileVersionMap)) {
+        if (IndexUtils.indexMap.equals(fileVersionMap)) {
             // note: this implementation is different from the proj2 doc
             System.out.println("No changes added to the commit.");
         }
-        Commit newCommit = CommitUtils.makeCommit(commitMessage, currentCommitId, indexMap);
-        CommitUtils.createFileObjects(currentCommit, newCommit, stagedFileContents); // create the files (different from the last commit)
-        stagedFileContents.clear();
+        Commit newCommit = CommitUtils.makeCommit(commitMessage, currentCommitId, IndexUtils.indexMap);
+        CommitUtils.createFileObjects(currentCommit, newCommit, IndexUtils.stagedFileContents); // create the files (different from the last commit)
+        IndexUtils.stagedFileContents.clear();
         IndexUtils.saveIndex(); // clear and save
         String newCommitId = CommitUtils.saveCommit(newCommit);
         BranchUtils.saveCommitId(HEAD, newCommitId); // save current branch pointer --> new commit id
@@ -267,8 +268,8 @@ public class Repository {
         // 2. restore indexMap
         // note: to keep consistency, checkout branch just like the new branch's commit() just happen
         // so it will restore indexMap & .gitlet/index, but stagedFiles and its file stay empty.
-        indexMap = commit.getFileVersionMap();
-        stagedFileContents.clear();
+        IndexUtils.indexMap = commit.getFileVersionMap();
+        IndexUtils.stagedFileContents.clear();
         IndexUtils.saveIndex();
     }
 

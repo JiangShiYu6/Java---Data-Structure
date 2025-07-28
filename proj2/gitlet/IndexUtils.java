@@ -16,11 +16,13 @@ import static gitlet.Help.isInitialized;
  * yes, every command changes index MUST call the method saveIndex() to save their change permanently
  */
 public class IndexUtils {
-    /** read the INDEX file(which stores a map, file name --> version), it represents next commits' name --> version map,
+    /** read the INDEX file(which stores a map, file name --> version), 
+     * it represents next commits' name --> version map,
      * which means just after one commit, the indexMap equals to commit fileVersionMap */
-    public static HashMap<String, String> indexMap;
-    /** staged files, which stages file id(sha1) --> file contents, stage or unstage file */
-    public static HashMap<String, String> stagedFileContents;
+    static HashMap<String, String> indexMap;
+    /** staged files, which stages file id(sha1) --> file contents, 
+     * stage or unstage file */
+    static HashMap<String, String> stagedFileContents;
 
     static {
         if (isInitialized()) {

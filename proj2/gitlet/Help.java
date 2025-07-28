@@ -1,10 +1,9 @@
 package gitlet;
 
-import gitlet.BranchUtils;
+
 
 import static gitlet.GitletConstants.HEAD_FILE;
 import static gitlet.GitletConstants.GITLET_DIR;
-import static gitlet.Repository.HEAD;
 import static gitlet.Utils.writeContents;
 
 public class Help {
@@ -16,7 +15,7 @@ public class Help {
      * */
     public static void setHEAD(String branchName) {
         assert BranchUtils.branchExists(branchName);
-        HEAD = branchName;
+        Repository.HEAD = branchName;
         writeContents(HEAD_FILE, branchName);
     }
 
@@ -24,7 +23,7 @@ public class Help {
      * head --> branch name --> commit id
      */
     public static String getHeadCommitId() {
-        return BranchUtils.getCommitId(HEAD);
+        return BranchUtils.getCommitId(Repository.HEAD);
     }
 
     /**

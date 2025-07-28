@@ -19,22 +19,22 @@ import java.util.TimeZone;
  * this class will be serialized to a file in [commits] folder in [.gitlet]
  */
 public class Commit implements Serializable {
-    /** The message of this Commit. */
+    /** 此提交的消息 */
     private String message;
-    /** the commit time stamp */
+    /** 提交时间戳 */
     private Date commitTime;
 
-    /** parentSHA1 value */
+    /** 父提交的SHA1值 */
     private String parentId;
 
-    /** second Parent */
+    /** 第二个父提交 */
     private String secondParentId;
 
-    /** store flat file names and its version(represented by SHA-1) */
+    /** 存储文件名和其版本（用SHA-1表示） */
     private HashMap<String, String> fileVersionMap;
 
     /***
-     * fileVersionMap will never be null.
+     * fileVersionMap永远不会为null。
      */
     public Commit() {
         fileVersionMap = new HashMap<>();
@@ -68,8 +68,8 @@ public class Commit implements Serializable {
         this.commitTime = commitTime;
     }
 
-    public void setParentId(String ParentId) {
-        this.parentId = ParentId;
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
     }
 
     public void setSecondParentId(String secondParentId) {
@@ -81,10 +81,11 @@ public class Commit implements Serializable {
     }
 
     /***
-     * print key info for log command
+     * 为log命令打印关键信息
      */
     public void printCommitInfo() {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat(
+            "EEE MMM d HH:mm:ss yyyy Z", Locale.US);
         sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
         System.out.println("===");
         System.out.println("commit " + CommitUtils.getCommitId(this));
