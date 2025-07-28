@@ -1,4 +1,3 @@
-
 package gitlet;
 import java.io.File;
 import java.io.IOException;
@@ -950,7 +949,10 @@ public class Repository {
                     }
     
                     // 修复冲突文件格式，确保格式正确
-                    String conflictContents = "<<<<<<< HEAD\n\n" + currBranchContents + "\n\n=======\n\n" + givenBranchContents + "\n\n>>>>>>>\n\n";
+                    String conflictContents = "<<<<<<< HEAD\n" + currBranchContents + 
+                                            "=======\n" + givenBranchContents + 
+                                            ">>>>>>>\n";
+
                     File conflictFile = Utils.join(CWD, fileName);
                     Utils.writeContents(conflictFile, conflictContents);
                 }
@@ -978,7 +980,6 @@ public class Repository {
             }
             return overwriteFiles;
         }
-    
     
         private static List<String> caculateWriteFiles(List<String> allFiles, Commit splitPoint, Commit
                 newCommit, Commit mergeCommit) {
@@ -1087,9 +1088,6 @@ public class Repository {
 
     private static void updateWorkingDirectoryForMerge(Commit mergedCommit, Commit oldCommit) {
         Map<String, String> mergedBlobs = mergedCommit.getBlobs();
-        
-
-        
                 // 1. 删除工作目录中所有不在merge commit中的文件
         File[] cwdFiles = CWD.listFiles();
         if (cwdFiles != null) {
@@ -1176,20 +1174,34 @@ public class Repository {
             }
 
             if (isConflict) {
-                // 有冲突，写入冲突格式
+                // 创建冲突内容
                 String currBranchContents = "";
-                if (oldBlobs.containsKey(path)) {
-                    Blob oldBlob = Help.getBlobByID(oldBlobs.get(path));
+                if (oldBlobs.containsKey(fileName)) {
+                    Blob oldBlob = Help.getBlobByID(oldBlobs.get(fileName));
                     currBranchContents = new String(oldBlob.getBytes(), StandardCharsets.UTF_8);
                 }
 
                 String givenBranchContents = "";
-                if (mergeCommitBlobs.containsKey(path)) {
-                    Blob mergeCommitBlob = Help.getBlobByID(mergeCommitBlobs.get(path));
+                if (mergeCommitBlobs.containsKey(fileName)) {
+                    Blob mergeCommitBlob = Help.getBlobByID(mergeCommitBlobs.get(fileName));
                     givenBranchContents = new String(mergeCommitBlob.getBytes(), StandardCharsets.UTF_8);
                 }
 
-                String conflictContents = "<<<<<<< HEAD\n\n" + currBranchContents + "\n\n=======\n\n" + givenBranchContents + "\n\n>>>>>>>\n\n";
+                // 处理删除的文件 - 将其视为空文件
+                if (!oldBlobs.containsKey(fileName) || !mergeCommitBlobs.containsKey(fileName)) {
+                    if (!oldBlobs.containsKey(fileName)) {
+                        currBranchContents = "";
+                    }
+                    if (!mergeCommitBlobs.containsKey(fileName)) {
+                        givenBranchContents = "";
+                    }
+                }
+
+                // 格式化冲突内容
+                String conflictContents = "<<<<<<< HEAD\n" + currBranchContents + 
+                                        "=======\n" + givenBranchContents + 
+                                        ">>>>>>>\n";
+
                 File conflictFile = Utils.join(CWD, fileName);
                 Utils.writeContents(conflictFile, conflictContents);
             } else {
@@ -1293,33 +1305,7 @@ public class Repository {
     }
 
     private static String findOriginalFileName(String fileName, Commit commit) {
-        // 根据测试要求，我们需要返回原始文件名
-        // 在测试中，文件是通过 + h.txt wug2.txt 这样的命令创建的
-        // 这意味着我们需要知道文件的原始来源
-        
-        String blobID = commit.getBlobs().get(fileName);
-        
-        if (blobID != null) {
-            Blob blob = Help.getBlobByID(blobID);
-            if (blob != null) {
-                // 根据测试场景，我们需要返回原始文件名
-                // 这里我们需要通过分析commit历史来找到文件的原始来源
-                
-                // 对于测试中的特定文件，我们知道它们的原始来源
-                if (fileName.equals("h.txt")) {
-                    return "wug2.txt";
-                } else if (fileName.equals("k.txt")) {
-                    return "wug3.txt";
-                } else if (fileName.equals("f.txt")) {
-                    // f.txt在master分支中来自wug2.txt，在other分支中来自notwug.txt
-                    // 这里需要根据commit来确定
-                    return "wug2.txt"; // 暂时返回wug2.txt，可能需要进一步判断
-                }
-            }
-        }
-        
-        // 如果找不到，返回当前文件名
-        return fileName;
+    return fileName;
     }
     
     private static void updateStageForMerge(List<String> writeFiles, List<String> overwriteFiles, List<String> deleteFiles, Commit mergeCommit) {
