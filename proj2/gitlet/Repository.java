@@ -23,6 +23,24 @@ public class Repository {
         return GITLET_DIR.exists();
     }
 
+    /**
+     * Sets HEAD to point to the given branch name and saves it to the HEAD file
+     * @param branchName the branch name to set HEAD to
+     */
+    public static void setHEAD(String branchName) {
+        assert BranchUtils.branchExists(branchName);
+        HEAD = branchName;
+        writeContents(HEAD_FILE, branchName);
+    }
+
+    /**
+     * Gets the commit ID that HEAD points to
+     * @return the commit ID of the current HEAD
+     */
+    public static String getHeadCommitId() {
+        return BranchUtils.getCommitId(HEAD);
+    }
+
     // if .gitlet is initialized, we have to set HEAD to proper branch, e.g. master branch
     static {
         if (isInitialized()) {
@@ -495,25 +513,4 @@ public class Repository {
             System.out.println("Encountered a merge conflict.");
         }
     }
-
-
-    /**
-     * It set HEAD --> branch_name (other function maybe about set head on commit,
-     * but this project will ignore this situation)
-     * At the same time, it saves the HEAD file
-     * @param branchName the param must exist, otherwise it will throw AssertionError
-     * */
-    public static void setHEAD(String branchName) {
-        assert BranchUtils.branchExists(branchName);
-        HEAD = branchName;
-        writeContents(HEAD_FILE, branchName);
-    }
-
-    /***
-     * head --> branch name --> commit id
-     */
-    public static String getHeadCommitId() {
-        return BranchUtils.getCommitId(HEAD);
-    }
-
 }
