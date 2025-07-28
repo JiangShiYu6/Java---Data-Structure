@@ -1,3 +1,4 @@
+
 package gitlet;
 import java.io.File;
 import java.io.IOException;
@@ -467,6 +468,61 @@ public class Repository {
             }
         }
     }
+    
+    private static void checkUntrackedFileConflictForMerge(Commit currCommit, Commit mergeCommit, Commit splitPoint) {
+        // 计算merge结果
+        List<String> allFiles = caculateAllFiles(splitPoint, currCommit, mergeCommit);
+        List<String> overwriteFiles = caculateOverwriteFiles(allFiles, splitPoint, currCommit, mergeCommit);
+        List<String> writeFiles = caculateWriteFiles(allFiles, splitPoint, currCommit, mergeCommit);
+        List<String> deleteFiles = caculateDeleteFiles(allFiles, splitPoint, currCommit, mergeCommit);
+        
+        // 创建merge结果的blob映射
+        Map<String, String> mergeResultBlobs = new HashMap<>(currCommit.getBlobs());
+        
+        // 添加要覆盖的文件
+        for (String fileName : overwriteFiles) {
+            String blobID = mergeCommit.getBlobs().get(fileName);
+            mergeResultBlobs.put(fileName, blobID);
+        }
+        
+        // 添加要写入的文件
+        for (String fileName : writeFiles) {
+            String blobID = mergeCommit.getBlobs().get(fileName);
+            mergeResultBlobs.put(fileName, blobID);
+        }
+        
+        // 删除要删除的文件
+        for (String fileName : deleteFiles) {
+            mergeResultBlobs.remove(fileName);
+        }
+        
+        // 检查未跟踪文件冲突
+        Map<String, String> currBlobs = currCommit.getBlobs();
+        Stage stage = Stage.loadStage();
+        
+        // 获取工作目录中的所有文件
+        File[] cwdFiles = CWD.listFiles();
+        if (cwdFiles != null) {
+            for (File file : cwdFiles) {
+                if (file.isFile()) {
+                    String fileName = file.getName();
+                    // 跳过 .gitlet 相关文件
+                    if (fileName.equals(".gitlet") || fileName.startsWith(".git")) {
+                        continue;
+                    }
+                    
+                    // 如果文件不在当前提交的跟踪文件中，也不在暂存区中，且merge结果要跟踪这个文件
+                    if (!currBlobs.containsKey(fileName) && 
+                        !stage.addStageFileExists(fileName) && 
+                        !stage.getRemoveStage().contains(fileName) &&
+                        mergeResultBlobs.containsKey(fileName)) {
+                        System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                        System.exit(0);
+                    }
+                }
+            }
+        }
+    }
     //从指定的 commit（而不是当前 HEAD）中，提取某个文件的快照内容（blob），然后还原到当前工作目录中覆盖该文件。
     public static void checkoutFileFromCommit(String commitID, String fileName) {
         // 支持短UID
@@ -574,6 +630,9 @@ public class Repository {
             }
             checkIfSplitPintIsGivenBranch(splitPoint, mergeCommit);
             checkIfSplitPintIsCurrBranch(splitPoint, mergeBranch);
+            
+            // 检查未跟踪文件冲突
+            checkUntrackedFileConflictForMerge(currCommit, mergeCommit, splitPoint);
             Map<String, String> currCommitBlobs = currCommit.getBlobs();
 
             String message = "Merged " + mergeBranch + " into " + currBranch + ".";
@@ -598,8 +657,6 @@ public class Repository {
                 // 更新暂存区
                 updateStageForMerge(writeFiles, overwriteFiles, deleteFiles, mergeCommit);
                 
-                // 输出文件状态信息
-                outputMergeStatus(deleteFiles, writeFiles, overwriteFiles, splitPoint, newCommit, mergeCommit);
                 return;
             }
 
@@ -959,11 +1016,8 @@ public class Repository {
                          splitPointMap.get(path).equals(mergeCommitMap.get(path))) {
                     deleteFiles.add(path);
                 }
-                // case: 文件在splitPoint中存在，两个分支都删除了 → delete
-                else if ((!newCommitMap.containsKey(path)) && 
-                         (!mergeCommitMap.containsKey(path))) {
-                    deleteFiles.add(path);
-                }
+                // 注意：如果两个分支都删除了同一个文件，根据merge逻辑应该保持原样，不做任何操作
+                // 所以这里不需要else if分支
             }
             return deleteFiles;
         }
@@ -1291,8 +1345,6 @@ public class Repository {
         stage.save();
     }
 }
-
-
 
 
 
