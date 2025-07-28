@@ -9,14 +9,12 @@ import static gitlet.Utils.*;
 import static gitlet.Help.getHeadCommitId;
 
 /**
- * @Author 3590
- * @Date 2024/3/2 0:18
+ * @Author Shiyu
  * @Description
- * For remotes (like skeleton which we’ve been using all semester),
- * we’ll simply use other Gitlet repositories.
- * Pushing simply means copying all commits and blobs that the remote
- * repository does not yet have to the remote repository, and resetting a branch reference.
- * Pulling is the same, but in the other direction.
+ * 对于远程仓库（如我们整个学期一直使用的skeleton），
+ * 我们将简单地使用其他Gitlet仓库。
+ * 推送只是将远程仓库尚未拥有的所有提交和blob复制到远程仓库，并重置分支引用。
+ * 拉取是相同的，但方向相反。
  */
 public class RemoteUtils {
     static TreeMap<String, String> remoteLocationMap = new TreeMap<>();
@@ -36,7 +34,7 @@ public class RemoteUtils {
     }
 
     /**
-     * ../remote/.gitlet, yes, you will get the remote .gitlet path
+     * ../remote/.gitlet，是的，你将获得远程.gitlet路径
      */
     public static String getRemotePath(String remoteName) {
         return remoteLocationMap.get(remoteName);
@@ -124,7 +122,7 @@ public class RemoteUtils {
     }
 
     /***
-     * @return if commitId is null, then return null. else, return the commit object in remote repo
+     * @return 如果commitId为null，则返回null。否则，返回远程仓库中的commit对象
      * */
     public static Commit readRemoteCommit(String commitId, String remoteName) {
         if (commitId == null) {
@@ -134,7 +132,7 @@ public class RemoteUtils {
     }
 
     /**
-     * trace back commits in remote repo. the result will include current commit.
+     * 在远程仓库中追溯提交。结果将包括当前提交。
      */
     public static List<Commit> remoteCommitTraceback(String commitId, String remoteName) {
         Commit commit = readRemoteCommit(commitId, remoteName);
@@ -148,7 +146,7 @@ public class RemoteUtils {
     }
 
     /**
-     * trace back commits in remote repo. the result will include current commit.
+     * 在远程仓库中追溯提交。结果将包括当前提交。
      */
     public static List<String> remoteCommitIdTraceback(String commitId, String remoteName) {
         Commit commit = readRemoteCommit(commitId, remoteName);
@@ -162,8 +160,8 @@ public class RemoteUtils {
     }
 
     /**
-     * if branch not exists in remote branch, then return null
-     * @return the branch's commit id
+     * 如果分支在远程分支中不存在，则返回null
+     * @return 分支的提交id
      */
     public static String readRemoteBranch(String branchName, String remoteName) {
         if (!remoteBranchExists(branchName, remoteName)) {
@@ -174,10 +172,10 @@ public class RemoteUtils {
     }
 
     /**
-     * it does two things:
-     * 1. add remoteName --> remotePath to remoteLocationMap and save it
-     * 2. create folder for this remote
-     * remotePath maybe ../testing/otherdir/.gitlet
+     * 它做两件事：
+     * 1. 将remoteName --> remotePath添加到remoteLocationMap并保存
+     * 2. 为此远程仓库创建文件夹
+     * remotePath可能是../testing/otherdir/.gitlet
      */
     public static void addRemote(String remoteName, String remotePath) {
         if (!REMOTE_FILE.exists()) {
@@ -196,7 +194,7 @@ public class RemoteUtils {
         for (String elem : split) {
             convertedPath.append(elem);
             convertedPath.append(File.separator); 
-            // the correct separator, windows for \, linux for /
+            // 正确的分隔符，Windows使用\，Linux使用/
         }
         convertedPath.delete(convertedPath.length() - 1, convertedPath.length());
         remoteLocationMap.put(remoteName, String.valueOf(convertedPath));
@@ -226,8 +224,8 @@ public class RemoteUtils {
         if (getHeadCommitId().equals(remoteHEADCommitId)) {
             return;
         }
-        // just think this problem as a linked list, not complicated Graph
-        // the order is the newest commit(front) --> older commit --> initial commit
+        // 只需将此问题视为链表，而不是复杂的图
+        // 顺序是最新提交（前面）--> 较旧提交 --> 初始提交
         List<String> historyCommitId = CommitUtils.commitIdTraceBack(currentCommit);
         if (!historyCommitId.contains(remoteHEADCommitId)) {
             System.out.println("Please pull down remote changes before pushing.");
@@ -236,21 +234,21 @@ public class RemoteUtils {
         int remoteIdx = historyCommitId.indexOf(remoteHEADCommitId);
         List<String> commitIdAppending = historyCommitId.subList(0, remoteIdx);
         Collections.reverse(commitIdAppending); 
-        // from remote id's next --> newest [not contains the remote HEAD commit]
-        // append future commit to remote branch
+        // 从远程id的下一个 --> 最新的[不包含远程HEAD提交]
+        // 将未来的提交追加到远程分支
         for (String commitId : commitIdAppending) {
-            // 1. copy the commit file
+            // 1. 复制提交文件
             copyCommitFileToRemote(commitId, remoteName);
-            // 2. copy the commit objects
+            // 2. 复制提交对象
             Commit commit = CommitUtils.readCommit(commitId);
             HashMap<String, String> fileVersionMap = commit.getFileVersionMap();
             for (String fileName : fileVersionMap.keySet()) {
                 copyObjectsFileToRemote(fileVersionMap.get(fileName), remoteName);
             }
         }
-        // add this branch (or overwriting this branch)
+        // 添加此分支（或覆盖此分支）
         copyBranchFileToRemote(remoteBranchName, remoteName);
-        // set HEAD points to this branch, note: HEAD always points to BRANCH NAME!
+        // 设置HEAD指向此分支，注意：HEAD始终指向分支名称！
         writeRemoteHEAD(remoteName, remoteBranchName);
     }
 
@@ -263,23 +261,23 @@ public class RemoteUtils {
             System.out.println("That remote does not have that branch.");
             return;
         }
-        // 1. copies all commits and blobs from the given branch in the remote repository
+        // 1. 从远程仓库的给定分支复制所有提交和blob
         String remoteCommitId = readRemoteBranch(remoteBranchName, remoteName);
         List<String> allTracedCommitIds = remoteCommitIdTraceback(remoteCommitId, remoteName);
-        // copy these commit files to local
+        // 将这些提交文件复制到本地
         for (String commitId : allTracedCommitIds) {
             copyCommitFileFromRemote(commitId, remoteName);
-            // copy blobs to local
+            // 将blob复制到本地
             Commit commit = readRemoteCommit(commitId, remoteName);
             HashMap<String, String> fileVersionMap = commit.getFileVersionMap();
             for (String fileName : fileVersionMap.keySet()) {
                 copyObjectsFileFromRemote(fileVersionMap.get(fileName), remoteName);
             }
         }
-        // create a new branch named [remote name]/[remote branch name] in local repo 
-        // & points to remote head commit
-        // note: because windows not allowed '/' or '\' in file name, 
-        // so we will create a folder, and save the commit.
+        // 在本地仓库中创建名为[远程名称]/[远程分支名称]的新分支
+        // 并指向远程头提交
+        // 注意：因为Windows不允许文件名中有'/'或'\'，
+        // 所以我们将创建一个文件夹，并保存提交。
         BranchUtils.saveCommitId(remoteName + "/" + remoteBranchName, remoteCommitId);
     }
 

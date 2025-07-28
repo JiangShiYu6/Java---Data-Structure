@@ -7,28 +7,27 @@ import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
 
 /**
- * @Author 3590
- * @Date 2024/2/24 14:55
- * @Description
+ * @Author Shiyu
+ * @Description 文件工具类
  */
 public class FileUtils {
     /***
-     * judge if the file in CWD has the same sha-1 with targetSHA1
-     * (which also means they have the same contents)
+     * 判断CWD中的文件是否与targetSHA1有相同的sha-1
+     * （这也意味着它们有相同的内容）
      */
     public static boolean hasSameSHA1(String fileName, String targetSHA1) {
         return getFileContentSHA1(fileName).equals(targetSHA1);
     }
 
     /**
-     * read contents of file of some version from .gitlet/objects
+     * 从.gitlet/objects读取某个版本文件的内容
      */
     public static String getFileContent(String fileSHA1) {
         return readContentsAsString(join(OBJECTS_DIR, fileSHA1));
     }
 
     /**
-     * read contents of file of the version of commit from .gitlet/objects
+     * 从.gitlet/objects读取提交版本中文件的内容
      */
     public static String getFileContent(String fileName, Commit commit) {
         assert fileName != null && commit != null;
@@ -36,16 +35,16 @@ public class FileUtils {
     }
 
     /***
-     * @param fileName the name of the file which is to be save as an object in .gitlet/objects
-     * @return sha1 of the file content
+     * @param fileName 要保存为.gitlet/objects中对象的文件名
+     * @return 文件内容的sha1
      */
     public static String createGitletObjectFile(String fileName) {
         return writeGitletObjectsFile(readContentsAsString(join(CWD, fileName)));
     }
 
     /***
-     * @param content the string contents of the file
-     * @return sha1 of the file content
+     * @param content 文件的字符串内容
+     * @return 文件内容的sha1
      */
     public static String writeGitletObjectsFile(String content) {
         String fileObjectId = sha1(content);
@@ -74,12 +73,12 @@ public class FileUtils {
         List<String> cwdFileNames = plainFilenamesIn(CWD);
         assert cwdFileNames != null;
         for (String cwdFileName : cwdFileNames) {
-            // delete not tracked files in this commit
+            // 删除此提交中未跟踪的文件
             if (!fileVersionMap.containsKey(cwdFileName)) {
                 Utils.restrictedDelete(join(CWD, cwdFileName));
             }
         }
-        // restore files to CWD
+        // 将文件恢复到CWD
         for (String fileName : fileVersionMap.keySet()) {
             writeCWDFile(fileName, getFileContent(fileVersionMap.get(fileName)));
         }

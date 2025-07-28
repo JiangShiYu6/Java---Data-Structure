@@ -8,10 +8,10 @@ import static gitlet.Utils.writeContents;
 
 public class Help {
         /**
-     * It set HEAD --> branch_name (other function maybe about set head on commit,
-     * but this project will ignore this situation)
-     * At the same time, it saves the HEAD file
-     * @param branchName the param must exist, otherwise it will throw AssertionError
+     * 设置HEAD --> 分支名（其他函数可能涉及设置head到提交，
+     * 但这个项目将忽略这种情况）
+     * 同时，它保存HEAD文件
+     * @param branchName 参数必须存在，否则会抛出AssertionError
      * */
     public static void setHEAD(String branchName) {
         assert BranchUtils.branchExists(branchName);
@@ -20,14 +20,14 @@ public class Help {
     }
 
     /***
-     * head --> branch name --> commit id
+     * head --> 分支名 --> 提交id
      */
     public static String getHeadCommitId() {
         return BranchUtils.getCommitId(Repository.HEAD);
     }
 
     /**
-     * @return boolean: checkout if this project is gitlet initialized
+     * @return boolean: 检查此项目是否已初始化gitlet
      * */
     public static boolean isInitialized() {
         return GITLET_DIR.exists();
