@@ -5,6 +5,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static gitlet.GitletConstants.*;
+import static gitlet.Help.isInitialized;
 
 /**
  * @description Driver class for Gitlet, a subset of the Git version-control system.
@@ -104,7 +105,7 @@ public class Main {
      * @param function as a Function interface for lambda
      */
     private static <T> void commandRunner(boolean argsNumberCheck, Consumer<T> function, T args) {
-        if (!Repository.isInitialized()) {
+        if (!isInitialized()) {
             System.out.println(UNINITIALIZED_WARNING);
             return;
         }
@@ -121,7 +122,7 @@ public class Main {
      * @param function as a Function interface for lambda
      */
     private static <T1, T2> void commandRunner(boolean argsNumberCheck, BiConsumer<T1, T2> function, T1 args1, T2 args2) {
-        if (!Repository.isInitialized()) {
+        if (!isInitialized()) {
             System.out.println(UNINITIALIZED_WARNING);
             return;
         }
@@ -138,7 +139,7 @@ public class Main {
      * @param function as a Function interface for lambda
      */
     private static void commandRunner(boolean argsNumberCheck, Runnable function) {
-        if (!Repository.isInitialized()) {
+        if (!isInitialized()) {
             System.out.println(UNINITIALIZED_WARNING);
             return;
         }

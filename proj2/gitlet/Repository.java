@@ -7,6 +7,9 @@ import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
 import static gitlet.IndexUtils.indexMap;
 import static gitlet.IndexUtils.stagedFileContents;
+import static gitlet.Help.setHEAD;
+import static gitlet.Help.getHeadCommitId;
+import static gitlet.Help.isInitialized;
 
 /**
  * @description Represents a gitlet repository. Provide helper functions called by Main method.
@@ -16,30 +19,7 @@ public class Repository {
     /** HEAD pointer, this pointer points to current branch name, not explicit commit id, for example HEAD == "master" */
     public static String HEAD;
 
-    /**
-     * @return boolean: checkout if this project is gitlet initialized
-     * */
-    public static boolean isInitialized() {
-        return GITLET_DIR.exists();
-    }
 
-    /**
-     * Sets HEAD to point to the given branch name and saves it to the HEAD file
-     * @param branchName the branch name to set HEAD to
-     */
-    public static void setHEAD(String branchName) {
-        assert BranchUtils.branchExists(branchName);
-        HEAD = branchName;
-        writeContents(HEAD_FILE, branchName);
-    }
-
-    /**
-     * Gets the commit ID that HEAD points to
-     * @return the commit ID of the current HEAD
-     */
-    public static String getHeadCommitId() {
-        return BranchUtils.getCommitId(HEAD);
-    }
 
     // if .gitlet is initialized, we have to set HEAD to proper branch, e.g. master branch
     static {

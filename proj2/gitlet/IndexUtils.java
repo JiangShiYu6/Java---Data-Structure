@@ -7,6 +7,7 @@ import java.util.List;
 
 import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
+import static gitlet.Help.isInitialized;
 
 /**
  * @Author 3590
@@ -22,7 +23,7 @@ public class IndexUtils {
     public static HashMap<String, String> stagedFileContents;
 
     static {
-        if (Repository.isInitialized()) {
+        if (isInitialized()) {
             indexMap = readIndex();
             stagedFileContents = readStagedContents();
         }

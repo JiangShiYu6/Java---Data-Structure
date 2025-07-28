@@ -6,6 +6,7 @@ import java.util.*;
 
 import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
+import static gitlet.Help.getHeadCommitId;
 
 /**
  * @Author 3590
@@ -220,8 +221,8 @@ public class RemoteUtils {
         }
         String remoteHEAD = readRemoteHEAD(remoteName);
         String remoteHEADCommitId = readRemoteBranch(remoteHEAD, remoteName);
-        Commit currentCommit = CommitUtils.readCommit(Repository.getHeadCommitId());
-        if (Repository.getHeadCommitId().equals(remoteHEADCommitId)) {
+        Commit currentCommit = CommitUtils.readCommit(getHeadCommitId());
+        if (getHeadCommitId().equals(remoteHEADCommitId)) {
             return;
         }
         // just think this problem as a linked list, not complicated Graph
