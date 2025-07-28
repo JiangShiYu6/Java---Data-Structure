@@ -7,23 +7,23 @@ import java.util.function.Consumer;
 import static gitlet.GitletConstants.*;
 
 /**
- * @description Gitlet的驱动类，Git版本控制系统的一个子集。
- * 提示：checkout命令也会恢复索引区域（所谓的"工作树清理"）
- * checkout只是将HEAD指针移动到某个提交（可能在另一个分支中）
+ * @description Driver class for Gitlet, a subset of the Git version-control system.
+ * hint: checkout command will also restore the index region(so-called "work tree clean")
+ * checkout just remove the HEAD pointer to a commit (maybe in other branch)
  *
- * 使用HEAD文件存储例如 HEAD --> master 信息
- * 使用branches目录存储不同的分支及其指向的提交
- * 例如：master分支使用名为[master]的文件并在其中存储[提交ID(SHA-1)]
+ * use a HEAD FILE to store e.g. HEAD --> master information
+ * use a branches directory to store different branch and it's pointer to commit
+ * for example: master branch uses a file named [master] and store [commit id(SHA-1)] in it.
  *
- * 提示：runnable没有参数也没有返回值！你可以将runnable视为普通类
+ * hint: runnable has no args and no return! you can just regard runnable as a normal class
  */
 public class Main {
 
     /**
      * @note
-     * 其他需要提供的错误
-     * 1. 输入命令的操作数数量或格式错误 --> 操作数错误
-     * 2. 命令必须在.gitlet文件夹已创建但尚未创建的情况下 --> 不在初始化的Gitlet目录中
+     * other error to be supplied
+     * 1. inputs a command with the wrong number or format of operands --> Incorrect operands.
+     * 2. command must with .gitlet folder created but hasn't been created --> Not in an initialized Gitlet directory.
      * */
     public static void main(String[] args) {
         if (args.length == 0) {
@@ -99,9 +99,9 @@ public class Main {
     }
 
     /***
-     * 同时检查一个命令是否在init()之后以及检查参数数量
-     * @param argsNumberCheck 我们建议你添加逻辑表达式，如：restArgs.length != 0
-     * @param function 作为lambda的Function接口
+     * check one command whether after init() and check arg numbers at the same time
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
      */
     private static <T> void commandRunner(boolean argsNumberCheck, Consumer<T> function, T args) {
         if (!Repository.isInitialized()) {
@@ -116,9 +116,9 @@ public class Main {
     }
 
     /***
-     * 同时检查一个命令是否在init()之后以及检查参数数量
-     * @param argsNumberCheck 我们建议你添加逻辑表达式，如：restArgs.length != 0
-     * @param function 作为lambda的Function接口
+     * check one command whether after init() and check arg numbers at the same time
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
      */
     private static <T1, T2> void commandRunner(boolean argsNumberCheck, BiConsumer<T1, T2> function, T1 args1, T2 args2) {
         if (!Repository.isInitialized()) {
@@ -133,9 +133,9 @@ public class Main {
     }
 
     /***
-     * 与上面的函数类似，但没有参数
-     * @param argsNumberCheck 我们建议你添加逻辑表达式，如：restArgs.length != 0
-     * @param function 作为lambda的Function接口
+     * similar to upper function with no args.
+     * @param argsNumberCheck we suggest you adding logic expression like: restArgs.length != 0
+     * @param function as a Function interface for lambda
      */
     private static void commandRunner(boolean argsNumberCheck, Runnable function) {
         if (!Repository.isInitialized()) {

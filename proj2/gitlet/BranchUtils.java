@@ -8,12 +8,13 @@ import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
 
 /**
- * @Author Shiyu
- * @Description 分支工具类，提供分支相关的操作方法
+ * @Author 3590
+ * @Date 2024/2/24 15:09
+ * @Description
  */
 public class BranchUtils {
     /**
-     * 获取远程分支文件夹对象，通过分支名称（例如：origin/master）
+     * get the file object of origin(folder) with branch name example origin/master
      */
     public static File getRemoteBranchFolder(String branchName) {
         assert branchName != null && branchName.contains("/");
@@ -22,7 +23,7 @@ public class BranchUtils {
     }
 
     /**
-     * 获取远程分支文件对象，通过分支名称（例如：origin/master）
+     * get the file object of branch(file) with branch name example origin/master
      */
     public static File getRemoteBranchFile(String branchName) {
         assert branchName != null && branchName.contains("/");
@@ -30,11 +31,8 @@ public class BranchUtils {
         return join(BRANCHES_DIR, split[0], split[1]);
     }
 
-    /**
-     * 获取指定分支的提交ID
-     */
     public static String getCommitId(String branchName) {
-        if (branchName.contains("/")) { // 处理远程分支情况：origin/master
+        if (branchName.contains("/")) { // handle case: origin/master
             File remoteBranchFile = getRemoteBranchFile(branchName);
             return readContentsAsString(remoteBranchFile);
         }
@@ -42,10 +40,10 @@ public class BranchUtils {
     }
 
     /**
-     * 设置当前分支指向新的提交ID
+     * set current branch points to new commit id
      */
     public static void saveCommitId(String branchName, String commitId) {
-        if (branchName.contains("/")) { // 处理远程分支情况：origin/master
+        if (branchName.contains("/")) { // handle case: origin/master
             String[] split = branchName.split("/");
             File folder = join(BRANCHES_DIR, split[0]);
             if (!folder.exists()) {
@@ -58,8 +56,8 @@ public class BranchUtils {
     }
 
     /**
-     * 删除分支文件，不会检查分支是否存在，直接删除相关的分支文件
-     * @note 此方法不会删除任何提交
+     * it will NOT check the existence of branch, directly remove the relevant branch file.
+     * @note it does not remove any commit.
      */
     public static boolean removeBranch(String branchName) {
         if (branchName.contains("/")) {
@@ -69,12 +67,12 @@ public class BranchUtils {
     }
 
     /***
-     * @return 按字典序排列的分支名称列表
+     * @return branchNameList with dictionary order
      */
     public static List<String> getAllBranchNames() {
         List<String> branchNameList = plainFilenamesIn(BRANCHES_DIR);
         assert branchNameList != null;
-        branchNameList = new LinkedList<>(branchNameList); // 分配新的内存空间以便修改此变量
+        branchNameList = new LinkedList<>(branchNameList); // allocate new memory space to modify this variable
         File[] remoteFolders = BRANCHES_DIR.listFiles(File::isDirectory);
         if (remoteFolders != null) {
             for (File remoteFolder : remoteFolders) {
@@ -90,8 +88,8 @@ public class BranchUtils {
     }
 
     /**
-     * 查询分支是否存在于 .gitlet/branches 目录中
-     * @param branchName 分支名称，不能为null，此函数会进行断言检查
+     * query if one branch exists in .gitlet/branches
+     * @param branchName must be not null. this function will assert it.
      */
     public static boolean branchExists(String branchName) {
         if (branchName.contains("/")) {

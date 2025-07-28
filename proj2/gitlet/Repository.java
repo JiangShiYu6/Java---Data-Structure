@@ -9,21 +9,21 @@ import static gitlet.IndexUtils.indexMap;
 import static gitlet.IndexUtils.stagedFileContents;
 
 /**
- * @description 表示一个gitlet仓库。提供被Main方法调用的辅助函数。
- * 例如：当输入(git add)时，Main方法将调用此Repository类中的相关辅助方法
+ * @description Represents a gitlet repository. Provide helper functions called by Main method.
+ * For example: when enter (git add), Main method will call relevant helper method in this Repository class
  */
 public class Repository {
-    /** HEAD指针，此指针指向当前分支名称，而不是明确的提交ID，例如 HEAD == "master" */
+    /** HEAD pointer, this pointer points to current branch name, not explicit commit id, for example HEAD == "master" */
     public static String HEAD;
 
     /**
-     * @return boolean: 检查此项目是否已初始化gitlet
+     * @return boolean: checkout if this project is gitlet initialized
      * */
     public static boolean isInitialized() {
         return GITLET_DIR.exists();
     }
 
-    // 如果.gitlet已初始化，我们必须将HEAD设置为适当的分支，例如master分支
+    // if .gitlet is initialized, we have to set HEAD to proper branch, e.g. master branch
     static {
         if (isInitialized()) {
             HEAD = new String(readContents(HEAD_FILE));
@@ -32,11 +32,11 @@ public class Repository {
 
     /**
      * @description
-     * 1. 初始化仓库并创建.gitlet文件夹
-     * 2. 创建空的索引文件用于git add命令
-     * 3. 创建commits/....(提交ID/SHA-1)来存储空提交
-     * 4. 创建branches/master来存储第一个提交ID，意味着master --> 第一个提交
-     * 5. 创建HEAD文件，并在其中存储master，意味着HEAD --> master
+     * 1. Init the repository and create the .gitlet folder
+     * 2. create empty index file for git add command
+     * 3. create commits/....(commit id/ SHA-1) to store a empty commit
+     * 4. create branches/master to store the first commit id, means master --> first commit
+     * 5. create HEAD file, and store master in this file, means HEAD --> master
      * */
     public static void init() {
         if (isInitialized()) {
@@ -48,12 +48,12 @@ public class Repository {
             return;
         }
 
-        // 根据上述逻辑，以下代码只会执行一次
-        // 为.gitlet创建关键文件夹和文件
+        // according to the logical above, following code will only be executed once
+        // create critical folders and files for .gitlet
         try {
-            INDEX_FILE.createNewFile(); // 最初，索引文件将是空的
+            INDEX_FILE.createNewFile(); // at first, the index file will be empty
             HEAD_FILE.createNewFile();
-            STAGED_FILE.createNewFile(); // 暂存文件内容
+            STAGED_FILE.createNewFile(); // stage file contents
         } catch (IOException e) {
             throw new RuntimeException("failed to create INDEX file and HEAD file");
         }
@@ -61,11 +61,11 @@ public class Repository {
         OBJECTS_DIR.mkdir();
         BRANCHES_DIR.mkdir();
 
-        // 存储并提交第一个空提交
+        // store & submit first empty commit
         Commit initialCommit = CommitUtils.makeEmptyCommit("initial commit");
         String initialCommitID = CommitUtils.saveCommit(initialCommit);
 
-        // 生成master分支 --> 初始提交
+        // generate master branch --> initial commit
         BranchUtils.saveCommitId(MASTER_BRANCH_NAME, initialCommitID);
 
         // HEAD --> MASTER
@@ -73,9 +73,9 @@ public class Repository {
     }
 
     /***
-     * 在gitlet中，一次只能添加一个文件。
-     * 但此函数支持一次添加多个文件
-     * @param fileName 要添加的文件名
+     * In gitlet, only one file may be added at a time.
+     * but this function supports add multiple files at once
+     * @param fileName the name of the file want to be added
      */
     public static void add(String fileName) {
         if (!join(CWD, fileName).exists()) {
@@ -83,10 +83,10 @@ public class Repository {
             return;
         }
 
-        // 也许我们应该只更新索引；因为每次提交后，索引和提交映射是相同的；
+        // maybe we should only update index; because after every commit, index and commit-map are same;
         if (indexMap.containsKey(fileName)) {
             String targetSHA1 = indexMap.get(fileName);
-            // 如果文件与当前索引文件相同，意味着没有变化，则直接返回
+            // if the file is same as current index files, means no change, then directly return
             if (FileUtils.hasSameSHA1(fileName, targetSHA1)) return;
         }
 
@@ -95,10 +95,10 @@ public class Repository {
     }
 
     /***
-     * 对于跟踪的文件从工作目录中丢失或在工作目录中更改，这不是失败
-     * 建议实现：在当前提交和暂存区域中保存[跟踪文件的快照]，以便稍后可以恢复
-     * 注意：这是sha-1的魔力：如果提交1和3有相同的test.txt，那么提交3只会覆盖test.txt对象文件（相同的sha1）
-     * @param commitMessage 每个提交必须包含提交消息
+     * It is not a failure for tracked files to be missing from the working directory or changed in the working directory
+     * advised implementation: Saves [a snapshot of tracked files] in the current commit and [staging area] so they can be restored at a later time
+     * note: this is the magic of sha-1: if commit 1 & 3 has the same test.txt, then commit 3 will just overwrite the test.txt object file(same sha1)
+     * @param commitMessage every commit must contain a commit message
      */
     public static void commit(String commitMessage) {
         if (commitMessage.isEmpty()) {
@@ -108,22 +108,22 @@ public class Repository {
         String currentCommitId = getHeadCommitId();
         Commit currentCommit = CommitUtils.readCommit(currentCommitId);
         HashMap<String, String> fileVersionMap = currentCommit.getFileVersionMap();
-        // bug：fileVersionMap可能为null，但indexMap永远不会为null（在git init之后）
+        // bug: fileVersionMap may be null, but indexMap will never be null(after git init)
         if (indexMap.equals(fileVersionMap)) {
-            // 注意：此实现与proj2文档不同
+            // note: this implementation is different from the proj2 doc
             System.out.println("No changes added to the commit.");
         }
         Commit newCommit = CommitUtils.makeCommit(commitMessage, currentCommitId, indexMap);
-        CommitUtils.createFileObjects(currentCommit, newCommit, stagedFileContents); // 创建文件（与上次提交不同）
+        CommitUtils.createFileObjects(currentCommit, newCommit, stagedFileContents); // create the files (different from the last commit)
         stagedFileContents.clear();
-        IndexUtils.saveIndex(); // 清除并保存
+        IndexUtils.saveIndex(); // clear and save
         String newCommitId = CommitUtils.saveCommit(newCommit);
-        BranchUtils.saveCommitId(HEAD, newCommitId); // 保存当前分支指针 --> 新提交ID
+        BranchUtils.saveCommitId(HEAD, newCommitId); // save current branch pointer --> new commit id
     }
 
     /***
-     * 逻辑只会删除工作目录中的明确文件，而不是.gitlet中的文件
-     * @param fileName 工作目录中的文件名
+     * the logic will only delete explicit file in work directory, not in .gitlet
+     * @param fileName the file name in work directory
      */
     public static void rm(String fileName) {
         Commit commit = CommitUtils.readCommit(getHeadCommitId());
@@ -134,15 +134,15 @@ public class Repository {
             return;
         }
         IndexUtils.unstageFile(fileName);
-        IndexUtils.saveIndex(); // 注意：所有更改都必须保存
+        IndexUtils.saveIndex(); // note: all changes must be saved
         if (trackedByHeadCommit) {
-            // 如果它被当前提交跟踪，你应该删除CWD中的文件
+            // if it is tracked by current commit, you should delete the file in CWD.
             restrictedDelete(join(CWD, fileName));
         }
     }
 
     /***
-     * 从头提交到初始提交跟踪提交链
+     * trace commit chain from head->commit to initial commit
      */
     public static void log() {
         Commit currentCommit = CommitUtils.readCommit(getHeadCommitId());
@@ -153,7 +153,7 @@ public class Repository {
     }
 
     /***
-     * global-log：以随机顺序打印所有提交
+     * global-log: print all commits with random order
      */
     public static void globalLog() {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
@@ -166,7 +166,7 @@ public class Repository {
     }
 
     /**
-     * 打印出具有给定提交消息的所有提交的ID，每行一个
+     * Prints out the ids of all commits that have the given commit message, one per line
      */
     public static void find(String commitMessage) {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
@@ -187,8 +187,8 @@ public class Repository {
     }
 
     /***
-     * 只是一个checkout接口，此命令将通过其调用的不同方法之一完成
-     * @param args 来自命令行的其余参数
+     * just an checkout interface, this command will be done by one of its different methods it calls
+     * @param args rest args from command line.
      */
     public static void checkout(String...args) {
         Commit commit = null;
@@ -219,13 +219,13 @@ public class Repository {
     }
 
     /**
-     * 更改为新分支的指针提交，就像新分支的提交刚刚发生一样。
-     * 所以indexMap(& .gitlet/index)与新分支提交fileVersionMap相同，stagedFiles(& .gitlet/staged-files)被清除。
-     * @param commit 当前提交对象（分支更改前）
-     * @param branchName 要更改为的分支名称
+     * change to new branch's pointer commit, just like the new branch's commit just happen.
+     * so indexMap(& .gitlet/index) is the same as the new branch commit fileVersionMap, stagedFiles(& .gitlet/staged-files) is cleared.
+     * @param commit current commit object (before branch change)
+     * @param branchName the name of the branch to be changed to
      */
     private static void checkoutBranch(Commit commit, String branchName) {
-        if (!BranchUtils.branchExists(branchName)) { // branchExists()将断言branchName != null
+        if (!BranchUtils.branchExists(branchName)) { // branchExists() will assert branchName != null
             System.out.println("No such branch exists.");
             return;
         }
@@ -241,21 +241,21 @@ public class Repository {
                 return;
             }
         }
-        // 将提交恢复到CWD
+        // restore commit to CWD
         Commit newBranchCommit = CommitUtils.readCommit(BranchUtils.getCommitId(branchName));
         restoreCommit(newBranchCommit);
 
-        // 3. 设置HEAD == 新分支名称
+        // 3. set HEAD == new branch name
         setHEAD(branchName);
     }
 
     /**
-     * 将此提交恢复到CWD，并恢复索引区域（清除stagedFileContents并恢复indexMap）
-     * 就像提交刚刚发生一样。
+     * restore this commit to CWD, and restore index region(clear stagedFileContents and restore indexMap)
+     * just like the commit just happen.
      */
     private static void restoreCommit(Commit commit) {
         Commit currentCommit = CommitUtils.readCommit(getHeadCommitId());
-        // 预检查
+        // pre-check
         for (String fileName : commit.getFileVersionMap().keySet()) {
             if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) {
                 System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
@@ -263,19 +263,19 @@ public class Repository {
             }
         }
 
-        // 1. 将文件恢复到CWD
+        // 1. restore files to CWD
         FileUtils.restoreCommitFiles(commit);
 
-        // 2. 恢复indexMap
-        // 注意：为了保持一致性，checkout分支就像新分支的commit()刚刚发生一样
-        // 所以它将恢复indexMap & .gitlet/index，但stagedFiles及其文件保持为空。
+        // 2. restore indexMap
+        // note: to keep consistency, checkout branch just like the new branch's commit() just happen
+        // so it will restore indexMap & .gitlet/index, but stagedFiles and its file stay empty.
         indexMap = commit.getFileVersionMap();
         stagedFileContents.clear();
         IndexUtils.saveIndex();
     }
 
     /***
-     * 提示：文件的新版本未暂存。这意味着我们不应该更改暂存区域
+     * hints: The new version of the file is not staged. it means we should NOT change staged area
      */
     public static void checkoutFile(Commit commit, String fileName) {
         if (!CommitUtils.isTrackedByCommit(commit, fileName)) {
@@ -288,8 +288,8 @@ public class Repository {
     }
 
     /***
-     * 使用给定名称创建新分支，并将其指向当前头提交。
-     * @param branchName 你创建的新分支名称
+     * Creates a new branch with the given name, and points it at the current head commit.
+     * @param branchName the new branch name you create.
      */
     public static void branch(String branchName) {
         if (BranchUtils.branchExists(branchName)) {
@@ -300,7 +300,7 @@ public class Repository {
     }
 
     /**
-     * 删除branchName的分支文件
+     * delete branch file of branchName
      */
     public static void removeBranch(String branchName) {
         if (!BranchUtils.branchExists(branchName)) {
@@ -315,10 +315,10 @@ public class Repository {
     }
 
     /**
-     * 打印出一些状态消息
+     * print out some status message
      */
     public static void status() {
-        // 打印分支
+        // print branches
         List<String> allBranchNames = BranchUtils.getAllBranchNames();
         System.out.println("=== Branches ===");
         for (String branchName : allBranchNames) {
@@ -326,14 +326,14 @@ public class Repository {
         }
         System.out.println();
 
-        // 打印暂存文件
+        // print staged files
         Commit commit = CommitUtils.readCommit(getHeadCommitId());
         List<String> stagedFileNames = IndexUtils.getStagedFiles(commit);
         System.out.println("=== Staged Files ===");
         stagedFileNames.forEach(System.out::println);
         System.out.println();
 
-        // 打印已删除文件
+        // print removed files
         List<String> removedFileNames = IndexUtils.getRemovedFiles(commit);
         System.out.println("=== Removed Files ===");
         removedFileNames.forEach(System.out::println);
@@ -349,7 +349,7 @@ public class Repository {
         modifiedNotStagedForCommit.forEach(System.out::println);
         System.out.println();
 
-        // （"未跟踪文件"）是指存在于工作目录中但既未暂存添加也未跟踪的文件
+        // ("Untracked Files") is for files present in the working directory but neither staged for addition nor tracked.
         System.out.println("=== Untracked Files ===");
         List<String> untrackedFileNames = IndexUtils.getUntrackedFiles(commit);
         untrackedFileNames.forEach(System.out::println);
@@ -357,7 +357,7 @@ public class Repository {
     }
 
     /**
-     * 该命令本质上是任意提交的checkout，它也会更改当前分支头。
+     * The command is essentially checkout of an arbitrary commit that also changes the current branch head.
      */
     public static void reset(String commitIdPrefix) {
         Commit commit = CommitUtils.readCommitByPrefix(commitIdPrefix);
@@ -372,11 +372,12 @@ public class Repository {
 
     /**
      * @note
-     * 如果当前提交中的未跟踪文件将被合并覆盖或删除，打印"There is an
-     * untracked file in the way; delete it, or add and commit it first."并退出；在执行其他任何操作之前执行此检查。
+     * If an untracked file in the current commit would be overwritten or deleted by the merge, print There is an
+     * untracked file in the way; delete it, or add and commit it first. and exit; perform this check before doing
+     * anything else.
      */
     public static void merge(String branchName) {
-        // 预检查失败情况
+        // pre check fail cases
         if (!BranchUtils.branchExists(branchName)) {
             System.out.println("A branch with that name does not exist.");
             return;
@@ -392,33 +393,33 @@ public class Repository {
             System.out.println("You have uncommitted changes.");
             return;
         }
-        // 获取当前分支提交、目标分支提交和分割点提交
+        // get current-branch commit, target-branch commit & split point commit
         Commit branchCommit = CommitUtils.readCommit(BranchUtils.getCommitId(branchName));
         // Commit splitPoint = CommitUtils.getSplitCommit(HEAD, branchName);
         Commit splitPoint = CommitUtils.getSplitCommitWithGraph(HEAD, branchName);
 
-        // 当前分支和目标分支在同一行的情况
+        // the cases in which the current branch and target branch in the same line
         if (splitPoint == null || CommitUtils.isSameCommit(branchCommit, splitPoint)) {
             System.out.println("Given branch is an ancestor of the current branch.");
-            return; // 在这种情况下，head和branch指向同一个提交，无需合并
+            return; // in this case, head & branch points to the same commit, no need to merge
         }
         if (CommitUtils.isSameCommit(currentCommit, splitPoint)) {
             String savedHEAD = HEAD;
-            checkout(branchName); // checkout分支，注意它会改变head --> 另一个分支
+            checkout(branchName); // checkout branch, note it will change head --> another branch
             HEAD = savedHEAD;
-            // 快进master指针
+            // fast-forward master pointer
             BranchUtils.saveCommitId(HEAD, BranchUtils.getCommitId(branchName));
             System.out.println("Current branch fast-forwarded.");
             return;
         }
 
-        // 复杂情况：无冲突合并或有冲突合并
+        // Complex situation: merge with no conflict or merge with conflict
         Set<String> splitPointFiles = splitPoint.getFileVersionMap().keySet();
         Set<String> currentCommitFiles = currentCommit.getFileVersionMap().keySet();
         Set<String> branchCommitFiles = branchCommit.getFileVersionMap().keySet();
-        // 合并上述三个集合以获得三个提交中的所有相关文件
-        // bug：你必须分配新内存，而不是引用
-        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); // 变量splitPointFiles有其他用途
+        // union the upper three set to get all relevant files in three commits
+        // bug: you have to allocate new memory, not reference
+        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); // there is other usage with variable splitPointFiles
         allRelevantFiles.addAll(currentCommitFiles);
         allRelevantFiles.addAll(branchCommitFiles);
 
@@ -428,25 +429,25 @@ public class Repository {
             boolean splitCurrentConsistent = CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
             boolean splitBranchConsistent = CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
             boolean branchCurrentConsistent = CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
-            // 无冲突合并
+            // merge no conflicts
             if ((splitBranchConsistent && !splitCurrentConsistent) || branchCurrentConsistent) {
                 continue;
             }
 
             if (!splitBranchConsistent && splitCurrentConsistent) {
                 if (!branchCommitFiles.contains(fileName)) {
-                    // 在这种情况下，其他两个提交必须包含该文件
-                    // 从CWD中删除文件，不在合并提交中跟踪此文件
-                    // 这意味着删除indexMap中此fileName的记录
-                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // 需要安全检查
+                    // in this case, other two commit must contain the file
+                    // remove the file from CWD & not tracked this file in merged commit
+                    // which means drop indexMap's record with this fileName
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
                         System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                         return;
                     } else {
                         rm(fileName);
                     }
                 } else {
-                    // 在这种情况下，我们将checkout branchCommit中的文件并将其添加到索引
-                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // 需要安全检查
+                    // in this case, we will checkout the file in branchCommit and add it to index
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
                         System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                         return;
                     } else {
@@ -457,7 +458,7 @@ public class Repository {
                 continue;
             }
 
-            // 有冲突合并，如果逻辑可以简化
+            // merge with conflicts, if logic can be simplified
             if (!splitBranchConsistent && !splitCurrentConsistent && !branchCurrentConsistent) {
                 conflictFlag = true;
                 StringBuilder conflictedContents = new StringBuilder("<<<<<<< HEAD\n");
@@ -469,7 +470,7 @@ public class Repository {
                 conflictedContents.append("=======\n");
                 conflictedContents.append(branchCommitContent);
                 conflictedContents.append(">>>>>>>\n");
-                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // 需要安全检查
+                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
                     System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                     return;
                 } else {
@@ -479,17 +480,17 @@ public class Repository {
             }
         }
 
-        // 1. 创建提交 2. 设置此新提交的secondParentId
+        // 1. make commit 2. set this new commit secondParentId
         commit("Merged " + branchName + " into " + HEAD + ".");
         Commit mergeCommit = CommitUtils.readCommit(getHeadCommitId());
         mergeCommit.setSecondParentId(BranchUtils.getCommitId(branchName));
-        // bug：你必须保存合并提交。所有更改都必须保存
+        // bug: you have to save the merge commit. all changes must be saved
         CommitUtils.saveCommit(mergeCommit);
 
-        // 3. 其他要做的事情：你必须让当前分支 --> 合并提交
+        // 3. other things to do: you have to make the current branch --> merged commit
         BranchUtils.saveCommitId(HEAD, CommitUtils.getCommitId(mergeCommit));
 
-        // 如果有冲突，你应该输出一些消息
+        // if conflicted, you should out put some message
         if (conflictFlag) {
             System.out.println("Encountered a merge conflict.");
         }
@@ -497,10 +498,10 @@ public class Repository {
 
 
     /**
-     * 它设置HEAD --> branch_name（其他函数可能是关于在提交上设置head，
-     * 但此项目将忽略这种情况）
-     * 同时，它保存HEAD文件
-     * @param branchName 参数必须存在，否则将抛出AssertionError
+     * It set HEAD --> branch_name (other function maybe about set head on commit,
+     * but this project will ignore this situation)
+     * At the same time, it saves the HEAD file
+     * @param branchName the param must exist, otherwise it will throw AssertionError
      * */
     public static void setHEAD(String branchName) {
         assert BranchUtils.branchExists(branchName);
@@ -509,7 +510,7 @@ public class Repository {
     }
 
     /***
-     * head --> 分支名称 --> 提交ID
+     * head --> branch name --> commit id
      */
     public static String getHeadCommitId() {
         return BranchUtils.getCommitId(HEAD);

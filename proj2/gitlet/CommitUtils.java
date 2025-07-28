@@ -8,16 +8,17 @@ import static gitlet.Utils.*;
 
 
 /**
- * @Author Shiyu
- * @Description 提交工具类，提供提交相关的操作方法
+ * @Author 3590
+ * @Date 2024/2/20 21:06
+ * @Description class for manipulate Commit, which is a JavaBean
  */
 public class CommitUtils {
     /**
-     * 创建一个没有文件版本映射的空提交
-     * 没有父提交SHA-1和父提交对象（类型也是Commit）
-     * @note 必须设置一个空的HashMap以避免空指针异常
-     * @param message 提交消息
-     * @return 提交Java Bean对象
+     * create an emptyCommit with no files -- version map
+     * with no parent SHA-1 and no parent object(type also Commit) itself
+     * @note you must set an empty HashMap to avoid null pointer
+     * @param message commit message
+     * @return the commit java bean
      * */
     public static Commit makeEmptyCommit(String message) {
         Commit commit = new Commit();
@@ -29,12 +30,12 @@ public class CommitUtils {
     }
 
     /***
-     * 创建一个普通的提交bean对象
-     * @note 必须设置一个空的HashMap以避免空指针异常
-     * @param message 提交消息，我们不会检查是否为空
-     * @param parentCommitId 显而易见的参数
-     * @param fileVersionMap 总是来自当前索引映射，如果为null，将被替换为空的哈希映射
-     * @return 提交bean对象
+     * create a normal commit bean.
+     * @note you must set an empty HashMap to avoid null pointer
+     * @param message commit message, we will not check if this is empty
+     * @param parentCommitId obvious parameter
+     * @param fileVersionMap always from current index map, if == null, will be replaced by an empty hash map
+     * @return commit bean
      */
     public static Commit makeCommit(String message,
                                     String parentCommitId, HashMap<String, String> fileVersionMap) {
@@ -48,30 +49,27 @@ public class CommitUtils {
     }
 
     /***
-     * 将提交bean保存到.gitlet/commits目录，文件名为[SHA1]，内容是
-     * 可序列化的bean字符串
-     * @param commit 提交bean对象
-     * @return 提交ID（SHA-1）
+     * save the commit bean to .gitlet/commits, with file name [SHA1], contents is the
+     * serializable bean string.
+     * @param commit the commit bean
+     * @return commit id (SHA-1)
      */
     public static String saveCommit(Commit commit) {
-        // 注意：我们可能使用序列化字符串(byte[])来计算SHA-1（而不是文件）
-        // 因为序列化对象是字符串，它将直接写入文件
-        String CommitId = getCommitId(commit); // byte[]将被视为一个对象
+        // note: we maybe use serialized string(byte[]) to calculate SHA-1 (not file)
+        // because serialized object is string, which will be directly written to file.
+        String CommitId = getCommitId(commit); // byte[] will be regarded as an Object
         File commitFile = join(COMMITS_DIR, CommitId);
-        writeObject(commitFile, commit); // 存储我们的第一个提交
+        writeObject(commitFile, commit); // store our first commit
         return CommitId;
     }
 
-    /**
-     * 获取提交的ID
-     */
     public static String getCommitId(Commit commit) {
         return sha1(serialize(commit));
     }
 
     /***
-     * 从提交ID恢复提交Java bean对象
-     * @param commitId 提交的sha-1
+     * restore the commit java bean from its CommitId
+     * @param commitId sha-1 of the commit
      */
     public static Commit readCommit(String commitId) {
         if (commitId == null) {
@@ -81,10 +79,10 @@ public class CommitUtils {
     }
 
     /***
-     * 通过SHA-1前缀查找正确的提交bean对象
-     * @param prefix 提交的sha-1前缀
-     * @warning 此函数有bug，例如：前缀冲突
-     * @return 如果读取失败，如果没有异常，将返回null
+     * find correct commit bean with prefix of SHA-1
+     * @param prefix prefix sha-1 of the commit
+     * @warning this function as bugs, for example: prefix collisions
+     * @return if read failed, if no exception, it will return null
      */
     public static Commit readCommitByPrefix(String prefix) {
         List<String> commitIdList = plainFilenamesIn(COMMITS_DIR);
@@ -106,9 +104,9 @@ public class CommitUtils {
     }
 
     /***
-     * 比较旧提交映射和新映射，并在新映射中创建新对象
-     * 注意：直接从工作目录保存文件是不安全的，因为用户可能会更改工作目录中文件的内容
-     * 相反，我们应该将文件保存在内存中，然后将它们保存到磁盘，以保持（sha1 <-- 正确内容）
+     * compare the old commit map and new map, and create new objects in new map
+     * note: directly save file from work directory is not safe, for user may change the content of the file in work directory
+     * instead, we should save the file in memory, and save them to disk, to keep (sha1 <-- right content)
      */
     public static void createFileObjects(Commit oldCommit, Commit newCommit, HashMap<String, String> stagedFiles) {
         HashMap<String, String> oldFileVersion = oldCommit.getFileVersionMap();
@@ -124,32 +122,23 @@ public class CommitUtils {
         }
     }
 
-    /**
-     * 检查文件是否被指定提交跟踪
-     */
     public static boolean isTrackedByCommit(String commitId, String fileName) {
         Commit commit = readCommit(commitId);
         return isTrackedByCommit(commit, fileName);
     }
 
-    /**
-     * 检查文件是否被指定提交跟踪
-     */
     public static boolean isTrackedByCommit(Commit commit, String fileName) {
         assert commit != null && fileName != null;
         return commit.getFileVersionMap().containsKey(fileName);
     }
 
-    /**
-     * 判断两个提交是否相同
-     */
     public static boolean isSameCommit(Commit commit1, Commit commit2) {
         assert commit1 != null && commit2 != null;
         return getCommitId(commit1).equals(getCommitId(commit2));
     }
 
     /**
-     * 回溯到初始提交，包括当前提交
+     * trace back to the initial commit, include currentCommit
      */
     public static List<Commit> commitTraceBack(Commit currentCommit) {
         List<Commit> commitList = new LinkedList<>();
@@ -162,8 +151,8 @@ public class CommitUtils {
     }
 
     /**
-     * 回溯到初始提交，包括当前提交
-     * @note 区别在于此函数将返回提交ID
+     * trace back to the initial commit, include currentCommit
+     * @note the difference is this function will return commit ids.
      */
     public static List<String> commitIdTraceBack(Commit currentCommit) {
         List<String> commitList = new LinkedList<>();
@@ -176,9 +165,9 @@ public class CommitUtils {
     }
 
     /**
-     * 获取此提交的所有祖先，包括提交本身
-     * @param visitedSet 应该是一个空集合
-     * @return 提交ID列表（字符串）
+     * get all ancestors of this commit. include this commit itself
+     * @param visitedSet should be an empty set.
+     * @return list of commit id (string)
      */
     public static List<String> commitAncestors(Commit commit, Set<String> visitedSet) {
         String parentId = commit.getParentId();
@@ -195,16 +184,13 @@ public class CommitUtils {
         return result;
     }
 
-    /**
-     * 检查是否已访问
-     */
     private static boolean visited(Set<String> visitedSet, String commitId) {
         return visitedSet.contains(commitId);
     }
 
     /**
-     * 获取两个分支的分割点
-     * @return 如果两个列表长度相同且有相同的提交列表，则返回null
+     * get the split point of two branches
+     * @return if the two list has same length and has same commit list, then return null
      */
     public static Commit getSplitCommit(String branchName1, String branchName2) {
         String branch1CommitId = BranchUtils.getCommitId(branchName1);
@@ -213,28 +199,28 @@ public class CommitUtils {
         Commit commit2 = readCommit(branch2CommitId);
         List<Commit> branch1Traced = commitTraceBack(commit1);
         List<Commit> branch2Traced = commitTraceBack(commit2);
-        Collections.reverse(branch1Traced); // bug：列表应该是 旧提交 --> 新提交！
+        Collections.reverse(branch1Traced); // bug : the list should be  old commit --> new commit !
         Collections.reverse(branch2Traced);
         int minLength = Math.min(branch1Traced.size(), branch2Traced.size());
         for (int i = 0; i < minLength; ++i) {
-            // 第一个不同提交的前面提交是分割点
+            // the front commit of the first different commit is the split point
             if (!isSameCommit(branch1Traced.get(i), branch2Traced.get(i))) {
                 return branch1Traced.get(i - 1);
             }
         }
-        // 如果两个列表长度相同且有相同的提交列表，则返回null
+        // if the two list has same length and has same commit list, then return null
         if (branch1Traced.size() == branch2Traced.size()) {
             return null;
         }
-        // 在minLength范围内，两个列表有相同的提交，则返回较短列表的末尾元素
+        // in minLength range, the two list has same commit, then the end elem of shorter list will be return
         return branch1Traced.size() < branch2Traced.size() ?
                 branch1Traced.get(branch1Traced.size() - 1) : branch2Traced.get(branch1Traced.size() - 1);
     }
 
 
     /**
-     * 使用图方法获取两个分支的分割点
-     * @return 如果两个列表长度相同且有相同的提交列表，则返回null
+     * get the split point of two branches
+     * @return if the two list has same length and has same commit list, then return null
      */
     public static Commit getSplitCommitWithGraph(String branchName1, String branchName2) {
         String branch1CommitId = BranchUtils.getCommitId(branchName1);
@@ -259,9 +245,9 @@ public class CommitUtils {
     }
 
     /**
-     * 计算共同祖先中每个节点的入度
-     * 可以通过这些提交指向的位置（出度）来计算
-     * @return 映射：提交ID --> 入度
+     * Calculate the in degree for each node in common ancestors.
+     * can be calculated by where those commit points to (out degree)
+     * @return map: commit id --> in degree
      */
     private static Map<String, Integer> inDegreeOfNodes(List<String> commitIds) {
         Map<String, Integer> statisticResult = new HashMap<>();
@@ -283,8 +269,8 @@ public class CommitUtils {
     }
 
     /**
-     * 返回两个提交是否有相同的文件版本，给定文件名
-     * @return 如果其中一个提交不包含该文件，返回null，否则返回true或false
+     * return if two commit has a same file version, given the file name
+     * @return if one of the commits doesn't contain the file, return null. else return true or false
      */
     public static Boolean hasSameFileVersion(String fileName, Commit commit1, Commit commit2) {
         assert commit1 != null && commit2 != null && fileName != null;
@@ -297,10 +283,10 @@ public class CommitUtils {
     }
 
     /**
-     * 检查具有文件名的文件的一致性
-     * 什么是一致性？它意味着两个提交：
-     * 1. 都有该文件或都没有该文件，
-     * 2. 如果都有该文件，必须有相同的文件版本
+     * check consistency of a file with fileName.
+     * what is consistency ? it means two commits:
+     * 1. both have the file or both don't have the file,
+     * 2. if both have the file, it must have the same file version
      */
     public static boolean isConsistent(String fileName, Commit commit1, Commit commit2) {
         assert commit1 != null && commit2 != null && fileName != null;

@@ -7,27 +7,28 @@ import static gitlet.GitletConstants.*;
 import static gitlet.Utils.*;
 
 /**
- * @Author Shiyu
- * @Description 文件工具类，提供文件相关的操作方法
+ * @Author 3590
+ * @Date 2024/2/24 14:55
+ * @Description
  */
 public class FileUtils {
     /***
-     * 判断当前工作目录中的文件是否与目标SHA-1值相同
-     * （这也意味着它们有相同的内容）
+     * judge if the file in CWD has the same sha-1 with targetSHA1
+     * (which also means they have the same contents)
      */
     public static boolean hasSameSHA1(String fileName, String targetSHA1) {
         return getFileContentSHA1(fileName).equals(targetSHA1);
     }
 
     /**
-     * 从.gitlet/objects目录读取某个版本文件的内容
+     * read contents of file of some version from .gitlet/objects
      */
     public static String getFileContent(String fileSHA1) {
         return readContentsAsString(join(OBJECTS_DIR, fileSHA1));
     }
 
     /**
-     * 从.gitlet/objects目录读取提交中某个版本文件的内容
+     * read contents of file of the version of commit from .gitlet/objects
      */
     public static String getFileContent(String fileName, Commit commit) {
         assert fileName != null && commit != null;
@@ -35,16 +36,16 @@ public class FileUtils {
     }
 
     /***
-     * @param fileName 要作为对象保存在.gitlet/objects中的文件名
-     * @return 文件内容的sha1值
+     * @param fileName the name of the file which is to be save as an object in .gitlet/objects
+     * @return sha1 of the file content
      */
     public static String createGitletObjectFile(String fileName) {
         return writeGitletObjectsFile(readContentsAsString(join(CWD, fileName)));
     }
 
     /***
-     * @param content 文件的字符串内容
-     * @return 文件内容的sha1值
+     * @param content the string contents of the file
+     * @return sha1 of the file content
      */
     public static String writeGitletObjectsFile(String content) {
         String fileObjectId = sha1(content);
@@ -52,46 +53,39 @@ public class FileUtils {
         return fileObjectId;
     }
 
-    /**
-     * 将内容写入当前工作目录的文件
-     */
     public static void writeCWDFile(String fileName, String content) {
         writeContents(join(CWD, fileName), content);
     }
 
-    /**
-     * 获取当前工作目录中文件内容的SHA1值
-     */
     public static String getFileContentSHA1(String fileName) {
         return sha1(readContentsAsString(join(CWD, fileName)));
     }
 
     /**
-     * 将某个提交跟踪的所有文件恢复到工作目录
-     * 在"未跟踪文件"检查之后，不会删除之前提交跟踪的文件
-     * 但是，当前工作目录中被之前提交跟踪但不被目标提交跟踪的文件将被删除
-     * 一些文件将被创建，这些是目标提交跟踪但不在当前工作目录中的文件
-     * @note 在调用此函数之前必须进行"未跟踪文件"检查
+     * restore all files tracked of one commit to work directory.
+     * after the "untracked file" check, no file tracked by pre-commit will be deleted.
+     * however, some files in CWD tracked by pre-commit and not tracked by after-commit will be deleted.
+     * some files will be created, which is after-commit tracked files, but not in CWD.
+     * @note you must do "untracked file" check before calling this function
      */
     public static void restoreCommitFiles(Commit commit) {
         HashMap<String, String> fileVersionMap = commit.getFileVersionMap();
         List<String> CWDFileNames = plainFilenamesIn(CWD);
         assert CWDFileNames != null;
         for (String CWDFileName : CWDFileNames) {
-            // 删除此提交中未跟踪的文件
+            // delete not tracked files in this commit
             if (!fileVersionMap.containsKey(CWDFileName)) {
                 Utils.restrictedDelete(join(CWD, CWDFileName));
             }
         }
-        // 将文件恢复到当前工作目录
+        // restore files to CWD
         for (String fileName : fileVersionMap.keySet()) {
             writeCWDFile(fileName, getFileContent(fileVersionMap.get(fileName)));
         }
     }
 
     /**
-     * 检查是否会覆盖或删除当前工作目录中的未跟踪文件
-     * @param fileName 某个提交中将要恢复到当前工作目录或从当前工作目录删除的文件名
+     * @param fileName the file name of some commit which will be restored to CWD or deleted in CWD
      */
     public static boolean isOverwritingOrDeletingCWDUntracked(String fileName, Commit currentCommit) {
         List<String> CWDFileNames = plainFilenamesIn(CWD);

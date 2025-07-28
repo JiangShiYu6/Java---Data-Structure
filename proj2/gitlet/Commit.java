@@ -8,33 +8,33 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * 关于transient的解释：
- * 当你将对象写入文件时，它会将自身和所有引用的成员都写入
- * 不要在运行时对象中使用Java指针来引用提交和blob，而是
- * 使用SHA-1哈希字符串。维护一个运行时映射（永远不写入文件）在这些SHA-1
- * 字符串和它们引用的运行时对象之间。（我认为这个运行时映射应该存储
- * 在Repository中，而不是在这个类中）
- * @description 此类只是一个JavaBean，用于存储关键信息。
- * 不用于执行任何操作。
- * 此类将被序列化到[.gitlet]中[commits]文件夹的文件中
+ * Interpret transient:
+ * when you write an object to file, it will write itself and all members it references to
+ * Don’t use Java pointers to refer to commits and blobs in your runtime objects, but instead
+ * use SHA-1 hash strings. Maintain a runtime map(never write to file) between these SHA-1
+ * strings and the runtime objects they refer to. (I think this runtime map should be stored
+ * in Repository, not in this class)
+ * @description this class is just a JavaBean which stores critical information.
+ * Not for doing anything.
+ * this class will be serialized to a file in [commits] folder in [.gitlet]
  */
 public class Commit implements Serializable {
-    /** 此提交的消息 */
+    /** The message of this Commit. */
     private String message;
-    /** 提交时间戳 */
+    /** the commit time stamp */
     private Date commitTime;
 
-    /** 父提交SHA1值 */
+    /** parentSHA1 value */
     private String parentId;
 
-    /** 第二个父提交 */
+    /** second Parent */
     private String secondParentId;
 
-    /** 存储文件名和其版本（由SHA-1表示） */
+    /** store flat file names and its version(represented by SHA-1) */
     private HashMap<String, String> fileVersionMap;
 
     /***
-     * fileVersionMap永远不会为null
+     * fileVersionMap will never be null.
      */
     public Commit() {
         fileVersionMap = new HashMap<>();
@@ -81,7 +81,7 @@ public class Commit implements Serializable {
     }
 
     /***
-     * 为log命令打印关键信息
+     * print key info for log command
      */
     public void printCommitInfo() {
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
