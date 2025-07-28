@@ -1,77 +1,98 @@
 package gitlet;
-// TODO: any imports you need here
+
 import java.io.Serializable;
-import java.util.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
- * Represents a Gitlet commit object.
- *
- * A commit in Gitlet represents a snapshot of the project at a given point in time.
- * It contains metadata such as a message, timestamp, parent commit ID, and a map
- * from file names to blob IDs (UIDs) representing the state of tracked files.
- *
- * In Gitlet, all commits are stored as serialized files under `.gitlet/objects/`,
- * where the filename is the SHA-1 UID of the commit's serialized content.
- *
- * The initial commit has no parent and uses a fixed timestamp of 00:00:00 UTC, Jan 1, 1970.
- *
- * @author TODO
+ * 关于transient的解释：
+ * 当你将对象写入文件时，它会将自身和所有引用的成员都写入
+ * 不要在运行时对象中使用Java指针来引用提交和blob，而是
+ * 使用SHA-1哈希字符串。维护一个运行时映射（永远不写入文件）在这些SHA-1
+ * 字符串和它们引用的运行时对象之间。（我认为这个运行时映射应该存储
+ * 在Repository中，而不是在这个类中）
+ * @description 此类只是一个JavaBean，用于存储关键信息。
+ * 不用于执行任何操作。
+ * 此类将被序列化到[.gitlet]中[commits]文件夹的文件中
  */
 public class Commit implements Serializable {
-
-    /** The commit message describing this snapshot (e.g., "initial commit", "Fixed bug", etc.). */
+    /** 此提交的消息 */
     private String message;
+    /** 提交时间戳 */
+    private Date commitTime;
 
-    /** The timestamp of when this commit was created. Initial commit uses Unix epoch (0). */
-    private Date timeStamp;
+    /** 父提交SHA1值 */
+    private String parentId;
 
-    /** The UID (SHA-1 hash) of the parent commit. Null if this is the initial commit. */
-    private List<String> parents;
+    /** 第二个父提交 */
+    private String secondParentId;
 
-    /**
-     * A map representing tracked files at this commit.
-     * Key: file name (e.g., "foo.txt")
-     * Value: blob UID (SHA-1 hash of file contents)
+    /** 存储文件名和其版本（由SHA-1表示） */
+    private HashMap<String, String> fileVersionMap;
+
+    /***
+     * fileVersionMap永远不会为null
      */
-    private HashMap<String, String> blobs;// 文件名 → blobID 的映射
-
-    private String id;
-
-    /** Constructs the initial commit with no parent and fixed timestamp. */
     public Commit() {
-        this.message = "initial commit";
-        this.timeStamp = new Date(0); // Unix Epoch
-        this.parents = new ArrayList<>();  // 空列表，表示没有父 commit
-        this.blobs = new HashMap<>();
-        this.id = null; // 临时设置为null
-        this.id = Utils.sha1(Utils.serialize(this));
+        fileVersionMap = new HashMap<>();
     }
-    public Commit(String message, List<String> parentID, Map<String, String> blobs) {
-        this.message = message == null ? "" : message;
-        this.parents = parentID == null ? new ArrayList<>() : new ArrayList<>(parentID);
-        this.blobs = blobs == null ? new HashMap<>() : new HashMap<>(blobs);
-        this.timeStamp = new Date();
-        this.id = null; // 临时设置为null
-        this.id = Utils.sha1(Utils.serialize(this));
-    }
-    //文件名,blobID
-    public Map<String, String> getBlobs() {
-        return blobs;
-    }
-    //生成当前 Commit 对象的唯一标识符（即 SHA-1 哈希值）。
-    public String getId() {
-        return id;
-    }
-    public Date getTimestamp(){
-        return timeStamp;
-    }
-    public String getMessage(){
+
+    public String getMessage() {
         return message;
     }
-    public List<String> getParents(){
-        return parents;
+
+    public Date getCommitTime() {
+        return commitTime;
     }
 
+    public String getParentId() {
+        return parentId;
+    }
 
+    public String getSecondParentId() {
+        return secondParentId;
+    }
 
+    public HashMap<String, String> getFileVersionMap() {
+        return fileVersionMap;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setCommitTime(Date commitTime) {
+        this.commitTime = commitTime;
+    }
+
+    public void setParentId(String ParentId) {
+        this.parentId = ParentId;
+    }
+
+    public void setSecondParentId(String secondParentId) {
+        this.secondParentId = secondParentId;
+    }
+
+    public void setFileVersionMap(HashMap<String, String> fileVersionMap) {
+        this.fileVersionMap = fileVersionMap;
+    }
+
+    /***
+     * 为log命令打印关键信息
+     */
+    public void printCommitInfo() {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+        System.out.println("===");
+        System.out.println("commit " + CommitUtils.getCommitId(this));
+        if (secondParentId != null) {
+            System.out.println("Merge: " + parentId.substring(0, 7) + " " + secondParentId.substring(0, 7));
+        }
+        System.out.println("Date: " + sdf.format(this.commitTime));
+        System.out.println(this.message);
+        System.out.println();
+    }
 }
