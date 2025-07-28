@@ -12,7 +12,8 @@ import static gitlet.Help.isInitialized;
 
 /**
  * @description Represents a gitlet repository. Provide helper functions called by Main method.
- * For example: when enter (git add), Main method will call relevant helper method in this Repository class
+ * For example: when enter (git add), Main method will call relevant helper method 
+ * in this Repository class
  */
 public class Repository {
     /** HEAD pointer, this pointer points to current branch name, not explicit commit id, for example HEAD == "master" */
@@ -232,11 +233,12 @@ public class Repository {
             System.out.println("No need to checkout the current branch.");
             return;
         }
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
-        assert CWDFileNames != null;
-        for (String fileName : CWDFileNames) {
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
+        assert cwdFileNames != null;
+        for (String fileName : cwdFileNames) {
             if (!CommitUtils.isTrackedByCommit(commit, fileName)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; " 
+                    + "delete it, or add and commit it first.");
                 return;
             }
         }
@@ -249,7 +251,8 @@ public class Repository {
     }
 
     /**
-     * restore this commit to CWD, and restore index region(clear stagedFileContents and restore indexMap)
+     * restore this commit to CWD, and restore index region
+     * (clear stagedFileContents and restore indexMap)
      * just like the commit just happen.
      */
     private static void restoreCommit(Commit commit) {
@@ -266,7 +269,8 @@ public class Repository {
         FileUtils.restoreCommitFiles(commit);
 
         // 2. restore indexMap
-        // note: to keep consistency, checkout branch just like the new branch's commit() just happen
+        // note: to keep consistency, checkout branch just like the new branch's 
+        // commit() just happen
         // so it will restore indexMap & .gitlet/index, but stagedFiles and its file stay empty.
         IndexUtils.indexMap = commit.getFileVersionMap();
         IndexUtils.stagedFileContents.clear();
@@ -339,8 +343,10 @@ public class Repository {
         System.out.println();
 
         System.out.println("=== Modifications Not Staged For Commit ===");
-        List<StringBuffer> modifiedNotStagedForCommit = IndexUtils.modifiedNotStagedForCommit(commit);
-        List<StringBuffer> deletedNotStagedForCommit = IndexUtils.deletedNotStagedForCommit(commit);
+        List<StringBuffer> modifiedNotStagedForCommit = 
+            IndexUtils.modifiedNotStagedForCommit(commit);
+        List<StringBuffer> deletedNotStagedForCommit = 
+            IndexUtils.deletedNotStagedForCommit(commit);
         modifiedNotStagedForCommit.forEach(s -> s.append(" (modified)"));
         deletedNotStagedForCommit.forEach(s -> s.append(" (deleted)"));
         modifiedNotStagedForCommit.addAll(deletedNotStagedForCommit);
@@ -348,7 +354,8 @@ public class Repository {
         modifiedNotStagedForCommit.forEach(System.out::println);
         System.out.println();
 
-        // ("Untracked Files") is for files present in the working directory but neither staged for addition nor tracked.
+        // ("Untracked Files") is for files present in the working directory 
+        // but neither staged for addition nor tracked.
         System.out.println("=== Untracked Files ===");
         List<String> untrackedFileNames = IndexUtils.getUntrackedFiles(commit);
         untrackedFileNames.forEach(System.out::println);
@@ -371,8 +378,9 @@ public class Repository {
 
     /**
      * @note
-     * If an untracked file in the current commit would be overwritten or deleted by the merge, print There is an
-     * untracked file in the way; delete it, or add and commit it first. and exit; perform this check before doing
+     * If an untracked file in the current commit would be overwritten or deleted 
+     * by the merge, print There is an untracked file in the way; delete it, 
+     * or add and commit it first. and exit; perform this check before doing 
      * anything else.
      */
     public static void merge(String branchName) {
@@ -418,18 +426,23 @@ public class Repository {
         Set<String> branchCommitFiles = branchCommit.getFileVersionMap().keySet();
         // union the upper three set to get all relevant files in three commits
         // bug: you have to allocate new memory, not reference
-        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); // there is other usage with variable splitPointFiles
+        Set<String> allRelevantFiles = new HashSet<>(splitPointFiles); 
+        // there is other usage with variable splitPointFiles
         allRelevantFiles.addAll(currentCommitFiles);
         allRelevantFiles.addAll(branchCommitFiles);
 
         boolean conflictFlag = false;
 
         for (String fileName : allRelevantFiles) {
-            boolean splitCurrentConsistent = CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
-            boolean splitBranchConsistent = CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
-            boolean branchCurrentConsistent = CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
+            boolean splitCurrentConsistent = 
+                CommitUtils.isConsistent(fileName, splitPoint, currentCommit);
+            boolean splitBranchConsistent = 
+                CommitUtils.isConsistent(fileName, splitPoint, branchCommit);
+            boolean branchCurrentConsistent = 
+                CommitUtils.isConsistent(fileName, currentCommit, branchCommit);
             // merge no conflicts
-            if ((splitBranchConsistent && !splitCurrentConsistent) || branchCurrentConsistent) {
+            if ((splitBranchConsistent && !splitCurrentConsistent) 
+                    || branchCurrentConsistent) {
                 continue;
             }
 
@@ -438,7 +451,8 @@ public class Repository {
                     // in this case, other two commit must contain the file
                     // remove the file from CWD & not tracked this file in merged commit
                     // which means drop indexMap's record with this fileName
-                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { 
+                        // safety check is needed
                         System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                         return;
                     } else {
@@ -446,7 +460,8 @@ public class Repository {
                     }
                 } else {
                     // in this case, we will checkout the file in branchCommit and add it to index
-                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                    if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { 
+                        // safety check is needed
                         System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                         return;
                     } else {
@@ -458,18 +473,20 @@ public class Repository {
             }
 
             // merge with conflicts, if logic can be simplified
-            if (!splitBranchConsistent && !splitCurrentConsistent && !branchCurrentConsistent) {
+            if (!splitBranchConsistent && !splitCurrentConsistent 
+                    && !branchCurrentConsistent) {
                 conflictFlag = true;
                 StringBuilder conflictedContents = new StringBuilder("<<<<<<< HEAD\n");
-                String currentCommitContent =  currentCommitFiles.contains(fileName) ?
-                                               FileUtils.getFileContent(fileName, currentCommit) : "";
-                String branchCommitContent = branchCommitFiles.contains(fileName) ?
-                                             FileUtils.getFileContent(fileName, branchCommit) : "";
+                String currentCommitContent =  currentCommitFiles.contains(fileName) 
+                    ? FileUtils.getFileContent(fileName, currentCommit) : "";
+                String branchCommitContent = branchCommitFiles.contains(fileName) 
+                    ? FileUtils.getFileContent(fileName, branchCommit) : "";
                 conflictedContents.append(currentCommitContent);
                 conflictedContents.append("=======\n");
                 conflictedContents.append(branchCommitContent);
                 conflictedContents.append(">>>>>>>\n");
-                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { // safety check is needed
+                if (FileUtils.isOverwritingOrDeletingCWDUntracked(fileName, currentCommit)) { 
+                    // safety check is needed
                     System.out.println(MERGE_MODIFY_UNTRACKED_WARNING);
                     return;
                 } else {

@@ -12,8 +12,10 @@ import static gitlet.Help.isInitialized;
 /**
  * @Author 3590
  * @Date 2024/2/24 16:07
- * @Description the right usage of this class is: change anything in memory, and finally save your change.
- * yes, every command changes index MUST call the method saveIndex() to save their change permanently
+ * @Description the right usage of this class is: change anything in memory, 
+ *               and finally save your change.
+ * yes, every command changes index MUST call the method saveIndex() 
+ * to save their change permanently
  */
 public class IndexUtils {
     /** read the INDEX file(which stores a map, file name --> version), 
@@ -42,8 +44,10 @@ public class IndexUtils {
     }
 
     /**
-     * stages a file (note: if file wrong, it will throw exception) in indexMap and stagedFileContents
-     * @note this function will NOT save anything to disk, just keep them in memory
+     * stages a file (note: if file wrong, it will throw exception) 
+     * in indexMap and stagedFileContents
+     * @note this function will NOT save anything to disk, 
+     *       just keep them in memory
      */
     public static void stageFile(String fileName) {
         // update: to save the space, we can just save sha1 in index map, and not really create the file object,
@@ -56,8 +60,10 @@ public class IndexUtils {
 
     /***
      * unstage a file in memory
-     * @note this function will NOT save anything to disk, just keep them in memory
-     * @note there maybe redundant entry in stagedFileContents, but it will finally be cleared once commit.
+     * @note this function will NOT save anything to disk, 
+     *       just keep them in memory
+     * @note there maybe redundant entry in stagedFileContents, 
+     *       but it will finally be cleared once commit.
      */
     public static void unstageFile(String fileName) {
         String fileSHA1 = sha1(indexMap.get(fileName));
@@ -142,18 +148,20 @@ public class IndexUtils {
      */
     public static boolean isRemoval(String fileName, Commit commit) {
         assert fileName != null && commit != null;
-        return commit.getFileVersionMap().containsKey(fileName) && !indexMap.containsKey(fileName);
+        return commit.getFileVersionMap().containsKey(fileName) 
+            && !indexMap.containsKey(fileName);
     }
 
     /**
-     * ("Untracked Files") is for files present in the working directory but neither staged for addition nor tracked.
+     * ("Untracked Files") is for files present in the working directory 
+     * but neither staged for addition nor tracked.
      * @note may be this method should be implemented in CommitUtils
      */
     public static List<String> getUntrackedFiles(Commit commit) {
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
         List<String> result = new LinkedList<>();
-        assert CWDFileNames != null;
-        for (String fileName : CWDFileNames) {
+        assert cwdFileNames != null;
+        for (String fileName : cwdFileNames) {
             if (!isStaged(fileName, commit) && !CommitUtils.isTrackedByCommit(commit, fileName)) {
                 result.add(fileName);
             }
@@ -163,21 +171,23 @@ public class IndexUtils {
 
     /**
      * "modified but not staged"
-     * Staged for addition, but with different contents than in the working directory; (modified) or
-     * Tracked in the current commit, changed in the working directory, but not staged; (deleted) or
-     * Staged for addition, but deleted in the working directory; or
-     * Not staged for removal, but tracked in the current commit and deleted from the working directory.
+     * Staged for addition, but with different contents than in the working directory; 
+     * (modified) or Tracked in the current commit, changed in the working directory, 
+     * but not staged; (deleted) or Staged for addition, but deleted in the working directory; 
+     * or Not staged for removal, but tracked in the current commit and deleted from the 
+     * working directory.
      * @return modifiedNotStagedForCommit file name list
      */
     public static List<StringBuffer> modifiedNotStagedForCommit(Commit commit) {
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
         List<StringBuffer> result = new LinkedList<>();
-        assert CWDFileNames != null;
-        for (String fileName : CWDFileNames) {
+        assert cwdFileNames != null;
+        for (String fileName : cwdFileNames) {
             boolean fileIsStaged = isStaged(fileName, commit);
             boolean fileIsTracked = CommitUtils.isTrackedByCommit(commit, fileName);
-            if ((fileIsStaged && !FileUtils.hasSameSHA1(fileName, indexMap.get(fileName))) ||
-                    (fileIsTracked && !FileUtils.hasSameSHA1(fileName, commit.getFileVersionMap().get(fileName)) && !fileIsStaged)) {
+            if ((fileIsStaged && !FileUtils.hasSameSHA1(fileName, indexMap.get(fileName))) 
+                    || (fileIsTracked && !FileUtils.hasSameSHA1(fileName, 
+                        commit.getFileVersionMap().get(fileName)) && !fileIsStaged)) {
                 result.add(new StringBuffer(fileName));
             }
         }
@@ -186,22 +196,23 @@ public class IndexUtils {
 
     /**
      * Staged for addition, but deleted in the working directory; or
-     * Not staged for removal, but tracked in the current commit and deleted from the working directory.
+     * Not staged for removal, but tracked in the current commit and deleted 
+     * from the working directory.
      * @return deletedNotStagedForCommit file name list
      */
     public static List<StringBuffer> deletedNotStagedForCommit(Commit commit) {
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
-        assert CWDFileNames != null;
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
+        assert cwdFileNames != null;
         List<StringBuffer> result = new LinkedList<>();
         List<String> stagedFiles = getStagedFiles(commit);
         for (String fileName : stagedFiles) {
-            if (!CWDFileNames.contains(fileName)) {
+            if (!cwdFileNames.contains(fileName)) {
                 result.add(new StringBuffer(fileName));
             }
         }
         HashMap<String, String> fileVersionMap = commit.getFileVersionMap();
         for (String fileName : fileVersionMap.keySet()) {
-            if (!CWDFileNames.contains(fileName) && !isRemoval(fileName, commit)) {
+            if (!cwdFileNames.contains(fileName) && !isRemoval(fileName, commit)) {
                 result.add(new StringBuffer(fileName));
             }
         }

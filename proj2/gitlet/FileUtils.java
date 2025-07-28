@@ -64,18 +64,19 @@ public class FileUtils {
     /**
      * restore all files tracked of one commit to work directory.
      * after the "untracked file" check, no file tracked by pre-commit will be deleted.
-     * however, some files in CWD tracked by pre-commit and not tracked by after-commit will be deleted.
+     * however, some files in CWD tracked by pre-commit and not tracked by 
+     * after-commit will be deleted.
      * some files will be created, which is after-commit tracked files, but not in CWD.
      * @note you must do "untracked file" check before calling this function
      */
     public static void restoreCommitFiles(Commit commit) {
         HashMap<String, String> fileVersionMap = commit.getFileVersionMap();
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
-        assert CWDFileNames != null;
-        for (String CWDFileName : CWDFileNames) {
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
+        assert cwdFileNames != null;
+        for (String cwdFileName : cwdFileNames) {
             // delete not tracked files in this commit
-            if (!fileVersionMap.containsKey(CWDFileName)) {
-                Utils.restrictedDelete(join(CWD, CWDFileName));
+            if (!fileVersionMap.containsKey(cwdFileName)) {
+                Utils.restrictedDelete(join(CWD, cwdFileName));
             }
         }
         // restore files to CWD
@@ -85,11 +86,14 @@ public class FileUtils {
     }
 
     /**
-     * @param fileName the file name of some commit which will be restored to CWD or deleted in CWD
+     * @param fileName the file name of some commit which will be restored to CWD 
+     *                 or deleted in CWD
      */
-    public static boolean isOverwritingOrDeletingCWDUntracked(String fileName, Commit currentCommit) {
-        List<String> CWDFileNames = plainFilenamesIn(CWD);
-        assert CWDFileNames != null && currentCommit != null;
-        return !CommitUtils.isTrackedByCommit(currentCommit, fileName) && CWDFileNames.contains(fileName);
+    public static boolean isOverwritingOrDeletingCWDUntracked(String fileName, 
+                                                            Commit currentCommit) {
+        List<String> cwdFileNames = plainFilenamesIn(CWD);
+        assert cwdFileNames != null && currentCommit != null;
+        return !CommitUtils.isTrackedByCommit(currentCommit, fileName) 
+            && cwdFileNames.contains(fileName);
     }
 }

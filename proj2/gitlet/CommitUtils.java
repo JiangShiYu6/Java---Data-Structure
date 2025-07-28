@@ -34,7 +34,8 @@ public class CommitUtils {
      * @note you must set an empty HashMap to avoid null pointer
      * @param message commit message, we will not check if this is empty
      * @param parentCommitId obvious parameter
-     * @param fileVersionMap always from current index map, if == null, will be replaced by an empty hash map
+     * @param fileVersionMap always from current index map, 
+     *                       if == null, will be replaced by an empty hash map
      * @return commit bean
      */
     public static Commit makeCommit(String message,
@@ -57,10 +58,10 @@ public class CommitUtils {
     public static String saveCommit(Commit commit) {
         // note: we maybe use serialized string(byte[]) to calculate SHA-1 (not file)
         // because serialized object is string, which will be directly written to file.
-        String CommitId = getCommitId(commit); // byte[] will be regarded as an Object
-        File commitFile = join(COMMITS_DIR, CommitId);
+        String commitId = getCommitId(commit); // byte[] will be regarded as an Object
+        File commitFile = join(COMMITS_DIR, commitId);
         writeObject(commitFile, commit); // store our first commit
-        return CommitId;
+        return commitId;
     }
 
     public static String getCommitId(Commit commit) {
@@ -105,10 +106,13 @@ public class CommitUtils {
 
     /***
      * compare the old commit map and new map, and create new objects in new map
-     * note: directly save file from work directory is not safe, for user may change the content of the file in work directory
-     * instead, we should save the file in memory, and save them to disk, to keep (sha1 <-- right content)
+     * note: directly save file from work directory is not safe, 
+     * for user may change the content of the file in work directory
+     * instead, we should save the file in memory, and save them to disk, 
+     * to keep (sha1 <-- right content)
      */
-    public static void createFileObjects(Commit oldCommit, Commit newCommit, HashMap<String, String> stagedFiles) {
+    public static void createFileObjects(Commit oldCommit, Commit newCommit, 
+                                       HashMap<String, String> stagedFiles) {
         HashMap<String, String> oldFileVersion = oldCommit.getFileVersionMap();
         HashMap<String, String> newFileVersion = newCommit.getFileVersionMap();
         for (String fileName : newFileVersion.keySet()) {
@@ -212,9 +216,11 @@ public class CommitUtils {
         if (branch1Traced.size() == branch2Traced.size()) {
             return null;
         }
-        // in minLength range, the two list has same commit, then the end elem of shorter list will be return
-        return branch1Traced.size() < branch2Traced.size() ?
-                branch1Traced.get(branch1Traced.size() - 1) : branch2Traced.get(branch1Traced.size() - 1);
+        // in minLength range, the two list has same commit, 
+        // then the end elem of shorter list will be return
+        return branch1Traced.size() < branch2Traced.size() 
+                ? branch1Traced.get(branch1Traced.size() - 1) 
+                : branch2Traced.get(branch1Traced.size() - 1);
     }
 
 
@@ -262,7 +268,8 @@ public class CommitUtils {
                 statisticResult.put(parentId, statisticResult.get(parentId) + 1);
             }
             if (secondParentId != null) {
-                statisticResult.put(secondParentId, statisticResult.get(secondParentId) + 1);
+                statisticResult.put(secondParentId, 
+                    statisticResult.get(secondParentId) + 1);
             }
         }
         return statisticResult;

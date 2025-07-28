@@ -195,7 +195,8 @@ public class RemoteUtils {
         StringBuilder convertedPath = new StringBuilder();
         for (String elem : split) {
             convertedPath.append(elem);
-            convertedPath.append(File.separator); // the correct separator, windows for \, linux for /
+            convertedPath.append(File.separator); 
+            // the correct separator, windows for \, linux for /
         }
         convertedPath.delete(convertedPath.length() - 1, convertedPath.length());
         remoteLocationMap.put(remoteName, String.valueOf(convertedPath));
@@ -234,7 +235,8 @@ public class RemoteUtils {
         }
         int remoteIdx = historyCommitId.indexOf(remoteHEADCommitId);
         List<String> commitIdAppending = historyCommitId.subList(0, remoteIdx);
-        Collections.reverse(commitIdAppending); // from remote id's next --> newest [not contains the remote HEAD commit]
+        Collections.reverse(commitIdAppending); 
+        // from remote id's next --> newest [not contains the remote HEAD commit]
         // append future commit to remote branch
         for (String commitId : commitIdAppending) {
             // 1. copy the commit file
@@ -274,8 +276,10 @@ public class RemoteUtils {
                 copyObjectsFileFromRemote(fileVersionMap.get(fileName), remoteName);
             }
         }
-        // create a new branch named [remote name]/[remote branch name] in local repo & points to remote head commit
-        // note: because windows not allowed '/' or '\' in file name, so we will create a folder, and save the commit.
+        // create a new branch named [remote name]/[remote branch name] in local repo 
+        // & points to remote head commit
+        // note: because windows not allowed '/' or '\' in file name, 
+        // so we will create a folder, and save the commit.
         BranchUtils.saveCommitId(remoteName + "/" + remoteBranchName, remoteCommitId);
     }
 
